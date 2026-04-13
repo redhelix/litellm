@@ -12,11 +12,11 @@
 
 ### Data Collection
 
-- [ ] **DATA-01**: LiteLLM `/spend/logs` polled and stored in DuckDB every 30 seconds
-- [ ] **DATA-02**: Prometheus metrics scraped from `192.168.50.117:9090` — TTFT histogram, latency histogram, token counters, deployment state
-- [ ] **DATA-03**: Context window utilization ratio derived at ingestion: `prompt_tokens ÷ model_max_context` (requires `/v1/model/info` to resolve max context per model)
-- [ ] **DATA-04**: Tool call 3-state status tracked: `success` / `repaired` (patched by `fix_json_tool_calls.py`) / `failed` — requires instrumentation in the tool call repair path
-- [ ] **DATA-05**: TTFT, model latency, and LiteLLM overhead stored as separate fields — not collapsed into total latency
+- [x] **DATA-01**: LiteLLM `/spend/logs` polled and stored in DuckDB every 30 seconds
+- [x] **DATA-02**: Prometheus metrics scraped from `192.168.50.117:9090` — TTFT histogram, latency histogram, token counters, deployment state
+- [x] **DATA-03**: Context window utilization ratio derived at ingestion: `prompt_tokens ÷ model_max_context` (requires `/v1/model/info` to resolve max context per model)
+- [x] **DATA-04**: Tool call 3-state status tracked: `success` / `repaired` (patched by `fix_json_tool_calls.py`) / `failed` — requires instrumentation in the tool call repair path
+- [x] **DATA-05**: TTFT, model latency, and LiteLLM overhead stored as separate fields — not collapsed into total latency
 
 ### Metrics
 
@@ -49,7 +49,7 @@
 ### System
 
 - [ ] **SYS-01**: Dashboard deployed as a Docker container alongside existing LiteLLM stack on docker-001
-- [ ] **SYS-02**: LiteLLM master key stored server-side only — never exposed to browser
+- [x] **SYS-02**: LiteLLM master key stored server-side only — never exposed to browser
 - [ ] **SYS-03**: Local network access only (no external auth required)
 
 ## v2 Requirements

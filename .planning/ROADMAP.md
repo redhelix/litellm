@@ -47,7 +47,7 @@
 - [x] 01-02-PLAN.md — Postgres poller (bounded 5m) + repairs tail reader (DATA-01, DATA-03, DATA-05 storage)
 - [x] 01-03-PLAN.md — Prometheus scraper with [1h] quantile queries (DATA-02, DATA-05 llm_api_latency)
 - [x] 01-04-PLAN.md — Instrument fix_json_tool_calls.py to emit repair events keyed on response.id (DATA-04)
-- [ ] 01-05-PLAN.md — APScheduler wiring, four /api routers, docker-compose dashboard-sidecar service (SYS-02)
+- [x] 01-05-PLAN.md — APScheduler wiring, four /api routers, docker-compose dashboard-sidecar service (SYS-02)
 **UI hint**: no
 
 ### Phase 2: Core Dashboard
