@@ -1,15 +1,19 @@
 import './index.css'
+import { useMemo } from 'react'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { RefreshRing } from '@/components/RefreshRing'
 import { OverviewPanel } from '@/components/OverviewPanel'
 import { ModelCard } from '@/components/ModelCard'
 import { NodeGrid } from '@/components/NodeGrid'
 import { Separator } from '@/components/ui/separator'
+import { RequestLogTable } from '@/components/RequestLogTable'
+import { TrendSection } from '@/components/TrendSection'
 
 const SIDECAR_URL = (import.meta.env.VITE_SIDECAR_URL as string) ?? 'http://docker-001:4001'
 
 function App() {
   const { models, nodes, error, countdown, isStale } = useDashboardData(SIDECAR_URL)
+  const modelNames = useMemo(() => models.map(m => m.model), [models])
 
   return (
     <div className="dark min-h-screen bg-zinc-950 text-zinc-50 px-8 py-12">
@@ -46,6 +50,18 @@ function App() {
 
       {/* Section 3: Node health grid */}
       <NodeGrid nodes={nodes} isStale={isStale} />
+
+      <Separator className="my-8 border-zinc-800" />
+
+      <section id="request-log" aria-labelledby="request-log-heading">
+        <RequestLogTable sidecarUrl={SIDECAR_URL} modelOptions={modelNames} />
+      </section>
+
+      <Separator className="my-8 border-zinc-800" />
+
+      <section aria-labelledby="trends-heading">
+        <TrendSection sidecarUrl={SIDECAR_URL} models={modelNames} />
+      </section>
     </div>
   )
 }
