@@ -43,8 +43,8 @@ export function useDashboardData(sidecarUrl: string): {
       try {
         const { modelsData, nodesData } = await fetchAll(controller.signal)
         if (!mounted) return
-        setModels(modelsData)
-        setNodes(nodesData)
+        setModels(Array.isArray(modelsData) ? modelsData : (modelsData.models ?? []))
+        setNodes(Array.isArray(nodesData) ? nodesData : (nodesData.nodes ?? []))
         setError(null)
         setLastSuccess(new Date())
         setCountdown(30)
