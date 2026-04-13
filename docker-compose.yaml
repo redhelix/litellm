@@ -1,0 +1,114 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: litellm-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=litellm
+      - POSTGRES_PASSWORD=litellm-synergy-2026
+      - POSTGRES_DB=litellm
+    volumes:
+      - litellm-pgdata:/var/lib/postgresql/data
+    networks:
+      - litellm-internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: litellm-redis
+    restart: unless-stopped
+    volumes:
+      - litellm-redis:/data
+    networks:
+      - litellm-internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  litellm:
+    build: .
+    image: litellm-proxy:local
+    container_name: litellm-proxy
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./config.yaml:/app/config.yaml
+      - ./strip_think.py:/app/strip_think.py
+      - ./weave_callback.py:/app/weave_callback.py
+      - ./fix_json_tool_calls.py:/app/fix_json_tool_calls.py
+      - ./firecrawl_search_transform.py:/usr/lib/python3.13/site-packages/litellm/llms/firecrawl/search/transformation.py
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PERPLEXITYAI_API_KEY=${PERPLEXITYAI_API_KEY}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
+      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10&connection_limit=20&pool_timeout=30
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - STORE_MODEL_IN_DB=False
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - WANDB_PROJECT=${WANDB_PROJECT:-litellm-proxy}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - litellm-internal
+      - traefik-net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/readiness')\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+    labels:
+      - "autoheal=true"
+    command:
+      - "--config"
+      - "/app/config.yaml"
+      - "--port"
+      - "4000"
+      - "--num_workers"
+      - "1"
+
+  autoheal:
+    image: willfarrell/autoheal
+    container_name: litellm-autoheal
+    restart: always
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+      - AUTOHEAL_INTERVAL=30
+      - AUTOHEAL_START_PERIOD=60
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - litellm-internal
+
+networks:
+  litellm-internal:
+    driver: bridge
+  traefik-net:
+    external: true
+
+volumes:
+  litellm-pgdata:
+  litellm-redis:
