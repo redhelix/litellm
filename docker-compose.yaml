@@ -123,6 +123,7 @@ services:
       # SYS-02: master key intentionally absent from this service
     networks:
       - litellm-internal
+      - traefik-net
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:4001/healthz')\" || exit 1"]
       interval: 30s
@@ -134,6 +135,8 @@ services:
       options:
         max-size: "50m"
         max-file: "3"
+    labels:
+      - "autoheal=true"
 
 networks:
   litellm-internal:
