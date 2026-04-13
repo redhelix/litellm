@@ -59,7 +59,11 @@
   2. The per-node health grid shows all 5 nodes (spark-001, spark-002, spark-003, hintonator, docker-gpu) with: model loaded, last request timestamp, and availability status — distinguishing unreachable from slow from healthy.
   3. The dashboard is accessible at a local network URL (e.g., `http://docker-001:PORT`) without any login or authentication prompt.
   4. Per-model metrics panels surface p50/p95 for TTFT and total latency, tokens/sec, context utilization %, and the tool call success/repaired/failed rate for each of the 7 deployed model aliases.
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 02-01-PLAN.md — Scaffold dashboard (Vite+React+TS+shadcn+vitest), CORS to sidecar, Wave 0 RED tests, live deployment_state probe (Wave 1)
+- [ ] 02-02-PLAN.md — useDashboardData polling hook + RefreshRing + ToolCallBar + OverviewPanel wired into App.tsx (Wave 2)
+- [ ] 02-03-PLAN.md — NodeGrid (VIEW-02) + ModelCard (MET-01..05) + final App.tsx layout (Wave 3)
+- [ ] 02-04-PLAN.md — Dockerfile+nginx, docker-compose dashboard service, Traefik route (no authentik), human-verify checkpoint (Wave 4)
 **UI hint**: yes
 
 ### Phase 3: Request Log + Trend Views
