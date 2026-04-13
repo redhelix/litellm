@@ -71,7 +71,7 @@ export function NodeGrid({ nodes, isStale }: NodeGridProps) {
                   </TableCell>
                   <TableCell>
                     <Tooltip>
-                      <TooltipTrigger asChild>
+                      <TooltipTrigger>
                         <span className="cursor-default text-sm text-zinc-300">
                           {formatRelativeTime(node.last_scrape)}
                         </span>

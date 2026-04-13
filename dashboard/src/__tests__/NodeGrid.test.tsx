@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { NodeGrid } from '@/components/NodeGrid'
 import { StatusDot } from '@/components/StatusDot'
 import type { NodeRow } from '@/types/api'
