@@ -415,22 +415,22 @@ None — this phase has no code to test and no test framework is expected. The v
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `maximum_spend_logs_retention_period` work in v1.83.6-nightly?**
    - What we know: Pitfalls research (PITFALLS.md) cited this config key; it is not currently set in config.yaml.
    - What's unclear: Whether the nightly build honors it or silently ignores it.
-   - Recommendation: Add it, restart, and monitor table size for 24h. If no rows are pruned at the 30-day boundary, fall back to a cron-based DELETE.
+   - RESOLVED: Plan mitigates uncertainty with a dual approach — add the config key AND run a one-shot DELETE for rows older than 30 days. Success criterion is table-size observable regardless of whether the config key is honored. If no automatic pruning occurs after 30 days, the fallback DELETE pattern is documented.
 
 2. **Is there already an index on `LiteLLMSpendLogs.startTime`?**
    - What we know: LiteLLM creates its own schema; the exact indexes are unknown without querying the live DB.
    - What's unclear: Whether bounded queries will be fast immediately or require an explicit CREATE INDEX.
-   - Recommendation: The plan should include a verification step (query `pg_indexes`) and a conditional index creation step.
+   - RESOLVED: Task 1 includes an explicit check (`SELECT indexname FROM pg_indexes WHERE tablename='LiteLLMSpendLogs'`) followed by a conditional `CREATE INDEX CONCURRENTLY` if not present. Plan does not assume the index exists.
 
 3. **Will restarting the litellm container to apply log rotation config cause a meaningful service disruption?**
    - What we know: Container has `restart: unless-stopped`; restart is typically < 15 seconds for litellm.
    - What's unclear: Whether any in-flight requests will be dropped during the restart.
-   - Recommendation: Treat as acceptable — this is a dev/lab environment with no SLA. Restart during a quiet period.
+   - RESOLVED: Accepted as low risk — this is a dev/lab environment with no SLA. Task 2 documents the restart step and notes it should be run during a quiet period. Threat model entry T-00-02 acknowledges this risk.
 
 ---
 
