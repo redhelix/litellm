@@ -18,8 +18,17 @@ def test_no_master_key_in_sidecar_source():
         if f.parts[-2] == "tests":
             continue
         text = f.read_text()
-        if "LITELLM_MASTER_KEY" in text:
-            offenders.append(str(f))
+        for line in text.splitlines():
+            stripped = line.strip()
+            # Allow the SYS-02 guard assertion lines in main.py (the check itself, not a leak):
+            #   assert "..." not in os.environ
+            #   "SYS-02 violation: ... must NOT be present ..."
+            if "LITELLM_MASTER_KEY" in stripped and (
+                "not in os.environ" in stripped or "must NOT be present" in stripped
+            ):
+                continue
+            if "LITELLM_MASTER_KEY" in stripped:
+                offenders.append(f"{f}:{stripped}")
     assert not offenders, f"SYS-02 violation: master key referenced in sidecar: {offenders}"
 
 
