@@ -58,7 +58,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
-      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10&connection_limit=20&pool_timeout=30
+      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - STORE_MODEL_IN_DB=False
@@ -116,7 +116,7 @@ services:
       - dashboard-duckdb:/data
       - /tmp/tool_repairs.jsonl:/tmp/tool_repairs.jsonl:ro
     environment:
-      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10&connection_limit=20&pool_timeout=30
+      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10
       - PROMETHEUS_URL=http://192.168.50.117:9090
       - CONFIG_YAML_PATH=/app/config.yaml
       - TOOL_REPAIRS_LOG=/tmp/tool_repairs.jsonl
