@@ -16,6 +16,7 @@ from routers.requests import router as requests_router
 from routers.models import router as models_router
 from routers.nodes import router as nodes_router
 from routers.latency import router as latency_router
+from routers.trends import router as trends_router
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
@@ -88,3 +89,4 @@ app.include_router(requests_router)
 app.include_router(models_router)
 app.include_router(nodes_router)
 app.include_router(latency_router)
+app.include_router(trends_router)
