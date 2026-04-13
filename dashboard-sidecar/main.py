@@ -3,6 +3,7 @@ import sys
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from db import get_connection, init_schema
@@ -69,6 +70,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, title="dashboard-sidecar")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://docker-001:4002"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/healthz")
