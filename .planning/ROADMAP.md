@@ -60,10 +60,10 @@
   3. The dashboard is accessible at a local network URL (e.g., `http://docker-001:PORT`) without any login or authentication prompt.
   4. Per-model metrics panels surface p50/p95 for TTFT and total latency, tokens/sec, context utilization %, and the tool call success/repaired/failed rate for each of the 7 deployed model aliases.
 **Plans**: 4 plans
-- [ ] 02-01-PLAN.md — Scaffold dashboard (Vite+React+TS+shadcn+vitest), CORS to sidecar, Wave 0 RED tests, live deployment_state probe (Wave 1)
-- [ ] 02-02-PLAN.md — useDashboardData polling hook + RefreshRing + ToolCallBar + OverviewPanel wired into App.tsx (Wave 2)
-- [ ] 02-03-PLAN.md — NodeGrid (VIEW-02) + ModelCard (MET-01..05) + final App.tsx layout (Wave 3)
-- [ ] 02-04-PLAN.md — Dockerfile+nginx, docker-compose dashboard service, Traefik route (no authentik), human-verify checkpoint (Wave 4)
+- [x] 02-01-PLAN.md — Scaffold dashboard (Vite+React+TS+shadcn+vitest), CORS to sidecar, Wave 0 RED tests, live deployment_state probe (Wave 1)
+- [x] 02-02-PLAN.md — useDashboardData polling hook + RefreshRing + ToolCallBar + OverviewPanel wired into App.tsx (Wave 2)
+- [x] 02-03-PLAN.md — NodeGrid (VIEW-02) + ModelCard (MET-01..05) + final App.tsx layout (Wave 3)
+- [x] 02-04-PLAN.md — Dockerfile+nginx, docker-compose dashboard service, Traefik route (no authentik), human-verify checkpoint (Wave 4)
 **UI hint**: yes
 
 ### Phase 3: Request Log + Trend Views
@@ -74,7 +74,11 @@
   1. The request log table shows the last 500+ requests, paginated, with columns for model, TTFT, total latency, context utilization %, tool call status (3-state), and timestamp — and can be filtered by model.
   2. Trend charts show 7-day and 30-day performance history per model for latency (p95), context utilization, and error/repair rate — rendered as separate sparklines per model alias, not a single overlapping multi-series chart.
   3. All trend queries are bounded — a 30-day query does not full-scan the `requests` table and returns within 2 seconds.
-**Plans**: TBD
+**Plans**: 4 plans
+- [ ] 03-01-PLAN.md — Wave 0 RED stubs: vitest stubs for RequestLogTable, TrendSection, useRequestLog, useTrends + pytest stubs for /api/requests and /api/trends (Wave 1)
+- [ ] 03-02-PLAN.md — Sidecar: update /api/requests (model filter + total count + offset cap) + new /api/trends router (VIEW-03, VIEW-04 backend) (Wave 1)
+- [ ] 03-03-PLAN.md — Frontend: recharts + shadcn installs, api.ts type extensions, useRequestLog + useTrends hooks (Wave 2)
+- [ ] 03-04-PLAN.md — Frontend: RequestLogTable component (VIEW-03), TrendSection component (VIEW-04), App.tsx wiring, human-verify checkpoint (Wave 2)
 **UI hint**: yes
 
 ### Phase 4: Config Drift + Benchmark Runner
@@ -110,7 +114,7 @@
 | 0. Infrastructure Prep | 0/? | Not started | - |
 | 1. Data Collection Layer | 0/? | Not started | - |
 | 2. Core Dashboard | 0/? | Not started | - |
-| 3. Request Log + Trend Views | 0/? | Not started | - |
+| 3. Request Log + Trend Views | 0/4 | Planned | - |
 | 4. Config Drift + Benchmark Runner | 0/? | Not started | - |
 | 5. Containerized Deployment | 0/? | Not started | - |
 
@@ -167,4 +171,4 @@
 ---
 
 *Roadmap created: 2026-04-13*
-*Last updated: 2026-04-13 after initialization*
+*Last updated: 2026-04-13 after Phase 3 planning*
