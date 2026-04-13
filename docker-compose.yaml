@@ -138,6 +138,29 @@ services:
     labels:
       - "autoheal=true"
 
+  dashboard:
+    build: ./dashboard
+    image: dashboard:local
+    container_name: dashboard
+    restart: unless-stopped
+    ports:
+      - "4002:80"
+    networks:
+      - traefik-net
+    labels:
+      - "autoheal=true"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
+
 networks:
   litellm-internal:
     driver: bridge
