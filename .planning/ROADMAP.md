@@ -42,7 +42,12 @@
   3. Context window utilization ratio (`prompt_tokens / max_context_window`) is computed at ingestion by cross-referencing `/v1/model/info` — every request row has a `context_utilization` float between 0 and 1.
   4. Tool call 3-state classification is tracked — `success` / `repaired` (from `fix_json_tool_calls.py` instrumentation) / `failed` appear as distinct values in the stored schema, not just binary pass/fail.
   5. The LiteLLM master key is consumed only by the backend sidecar via environment variable — no key material is present in any frontend bundle, environment, or browser request.
-**Plans**: TBD
+**Plans**: 5 plans
+- [ ] 01-01-PLAN.md — Project skeleton, DuckDB single-writer layer, config_loader (max dedup), Wave 0 pytest RED stubs
+- [ ] 01-02-PLAN.md — Postgres poller (bounded 5m) + repairs tail reader (DATA-01, DATA-03, DATA-05 storage)
+- [ ] 01-03-PLAN.md — Prometheus scraper with [1h] quantile queries (DATA-02, DATA-05 llm_api_latency)
+- [ ] 01-04-PLAN.md — Instrument fix_json_tool_calls.py to emit repair events keyed on response.id (DATA-04)
+- [ ] 01-05-PLAN.md — APScheduler wiring, four /api routers, docker-compose dashboard-sidecar service (SYS-02)
 **UI hint**: no
 
 ### Phase 2: Core Dashboard
