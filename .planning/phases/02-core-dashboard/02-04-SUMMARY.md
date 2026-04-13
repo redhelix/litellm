@@ -112,3 +112,53 @@ None — all three sections (Overview, Models, Nodes) are fully wired. Container
 - Task 3 checkpoint: PENDING human verify
 
 ## Self-Check: PASSED (Tasks 1-2)
+
+---
+
+## Post-Deploy Bug Fix: e.map TypeError on load (2026-04-13)
+
+**Commit:** `8447e6b` — fix(02-04): unwrap API response shape — e.map TypeError on load
+
+### Problem
+
+Dashboard crashed immediately on page load with:
+
+```
+Uncaught TypeError: e.map is not a function
+```
+
+Overview, Models, and Nodes sections never rendered.
+
+### Root Cause
+
+`useDashboardData.ts` passed raw fetch JSON directly to `setModels()` / `setNodes()`. The sidecar API returns wrapped envelopes:
+
+- `/api/models` → `{ "models": [...] }`
+- `/api/nodes`  → `{ "nodes": [...] }`
+
+The hook and all downstream components expected bare arrays.
+
+### Fix
+
+`dashboard/src/hooks/useDashboardData.ts` lines 46-47:
+
+```ts
+// Before
+setModels(modelsData)
+setNodes(nodesData)
+
+// After
+setModels(Array.isArray(modelsData) ? modelsData : (modelsData.models ?? []))
+setNodes(Array.isArray(nodesData) ? nodesData : (nodesData.nodes ?? []))
+```
+
+Defensive unwrap — works regardless of whether the API returns a bare array or wrapped object.
+
+### Verification
+
+- `npm run build` passed (TypeScript + Vite, no errors)
+- Image rebuilt on docker-001: `docker compose build dashboard && docker compose up -d dashboard`
+- `curl http://localhost:4002/` → HTTP 200
+- Dashboard renders all sections without console errors
+
+**Plan 02-04 is now complete.**
