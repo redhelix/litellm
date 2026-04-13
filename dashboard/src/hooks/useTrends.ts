@@ -57,8 +57,7 @@ export function useTrends(params: UseTrendsParams): {
       abortRefs.current.push(controller)
 
       fetch(
-        `${sidecarUrl}/api/trends?model=${encodeURIComponent(model)}&window=${window}`,
-        { signal: controller.signal }
+        `${sidecarUrl}/api/trends?model=${encodeURIComponent(model)}&window=${window}`
       )
         .then(r => {
           if (!r.ok) throw new Error(`HTTP ${r.status}`)
