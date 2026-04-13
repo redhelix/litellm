@@ -53,9 +53,8 @@ Declared values (multiples of 4):
 | 3xl | 64px | Not used in Phase 2 |
 
 Exceptions:
-- Node status indicator dots: 10px × 10px (not on 4-point scale — matches
-  common status-dot convention for clear readability)
-- Touch targets for any clickable element: minimum 44px height (accessibility
+- Node status indicator dots: 8px × 8px
+- Touch targets for any clickable element: minimum 48px height (accessibility
   floor, even for desktop-only tool)
 
 ---
@@ -65,13 +64,12 @@ Exceptions:
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 14px | 400 (regular) | 1.5 | Table cell content, node last-seen timestamps |
-| Label | 12px | 500 (medium) | 1.4 | Metric labels ("p50 TTFT", "tokens/sec"), column headers, badge text |
+| Label | 12px | 400 (regular) | 1.4 | Metric labels ("p50 TTFT", "tokens/sec"), column headers, badge text |
 | Heading | 18px | 600 (semibold) | 1.2 | Section headings ("Overview", "Node Health") |
-| Display | 28px | 700 (bold) | 1.1 | Primary aggregate metric values (e.g., "142ms") |
+| Display | 28px | 600 (semibold) | 1.1 | Primary aggregate metric values (e.g., "142ms") |
 
-Two weights in use for normal content: 400 body + 600 semibold.
-500 and 700 are edge-case weights used only for labels and display numbers
-respectively — they do not count as additional general-purpose weights.
+Two weights in use: 400 (regular) for body and labels, 600 (semibold) for
+headings and display numbers. No other weights are used.
 
 Monospace stack (for latency values and request IDs): `font-mono`
 (ui-monospace, Cascadia Code, Menlo, monospace). Applied to all numeric
@@ -164,7 +162,7 @@ The entire page fits without horizontal scroll at 1280px viewport width.
 | `Tooltip` | shadcn/Radix | Hover details on metric values (full p50/p95 breakdown) |
 | `Progress` | shadcn | Context utilization % bar inside model cards |
 | Stacked bar (custom) | Hand-rolled, ~30 lines | Tool call 3-state visual (3 coloured segments, no third-party dep) |
-| Status dot | Hand-rolled | 10px circle with green/amber/red fill, inline with node name |
+| Status dot | Hand-rolled | 8px circle with green/amber/red fill, inline with node name |
 | Auto-refresh ring | Hand-rolled | Thin SVG arc counting down 30s; resets on each fetch |
 
 No third-party registries. shadcn official only + small hand-rolled primitives.
