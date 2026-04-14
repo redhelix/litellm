@@ -109,7 +109,10 @@ Plans:
   2. The `metrics.duckdb` file is volume-mounted and survives a container restart — historical data is not lost on redeploy.
   3. The dashboard container is on the `litellm-internal` network and can reach `litellm-proxy:4000` and `litellm-db` without exposing any port to external networks beyond the intended dashboard port.
   4. The master key and all secrets are sourced from environment variables in `.env` — no secret is hardcoded in any `Dockerfile`, `docker-compose.yaml`, or application config file committed to the repo.
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Secrets audit: replace hardcoded DATABASE_URL/POSTGRES_PASSWORD in docker-compose.yaml, complete .env.template (SYS-01)
+- [ ] 05-02-PLAN.md — Live verification on docker-001: cold-start timing, DuckDB persistence, network isolation, human-verify checkpoint (SYS-01, SYS-03)
 **UI hint**: no
 
 ### Phase 6: Dashboard UX Enhancements
@@ -153,7 +156,7 @@ Items captured:
 | 2. Core Dashboard | 0/? | Not started | - |
 | 3. Request Log + Trend Views | 0/4 | Planned | - |
 | 4. Config Drift + Benchmark Runner | 0/? | Not started | - |
-| 5. Containerized Deployment | 0/? | Not started | - |
+| 5. Containerized Deployment | 0/2 | Planned | - |
 
 ---
 
@@ -210,4 +213,4 @@ Items captured:
 ---
 
 *Roadmap created: 2026-04-13*
-*Last updated: 2026-04-13 after Phase 3 planning*
+*Last updated: 2026-04-13 after Phase 5 planning*
