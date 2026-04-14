@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import type { ModelAggregate, NodeRow } from '@/types/api'
+import type { ModelAggregate, ModelInfo, NodeRow } from '@/types/api'
 
 export function useDashboardData(sidecarUrl: string): {
   models: ModelAggregate[]
   nodes: NodeRow[]
+  modelInfoMap: Record<string, ModelInfo>
   error: string | null
   countdown: number
   lastSuccess: Date | null
@@ -11,6 +12,7 @@ export function useDashboardData(sidecarUrl: string): {
 } {
   const [models, setModels] = useState<ModelAggregate[]>([])
   const [nodes, setNodes] = useState<NodeRow[]>([])
+  const [modelInfoMap, setModelInfoMap] = useState<Record<string, ModelInfo>>({})
   const [error, setError] = useState<string | null>(null)
   const [countdown, setCountdown] = useState(30)
   const [lastSuccess, setLastSuccess] = useState<Date | null>(null)
@@ -20,15 +22,17 @@ export function useDashboardData(sidecarUrl: string): {
   const abortRef = useRef<AbortController | null>(null)
 
   async function fetchAll(signal: AbortSignal) {
-    const [modelsRes, nodesRes] = await Promise.all([
+    const [modelsRes, nodesRes, modelInfoRes] = await Promise.all([
       fetch(`${sidecarUrl}/api/models`, { signal }),
       fetch(`${sidecarUrl}/api/nodes`, { signal }),
+      fetch(`${sidecarUrl}/api/model-info`, { signal }),
     ])
-    const [modelsData, nodesData] = await Promise.all([
+    const [modelsData, nodesData, modelInfoData] = await Promise.all([
       modelsRes.json(),
       nodesRes.json(),
+      modelInfoRes.json(),
     ])
-    return { modelsData, nodesData }
+    return { modelsData, nodesData, modelInfoData }
   }
 
   useEffect(() => {
@@ -41,10 +45,17 @@ export function useDashboardData(sidecarUrl: string): {
 
     const doFetch = async () => {
       try {
-        const { modelsData, nodesData } = await fetchAll(controller.signal)
+        const { modelsData, nodesData, modelInfoData } = await fetchAll(controller.signal)
         if (!mounted) return
         setModels(Array.isArray(modelsData) ? modelsData : (modelsData.models ?? []))
         setNodes(Array.isArray(nodesData) ? nodesData : (nodesData.nodes ?? []))
+        // /api/model-info returns Record<alias, ModelInfo> — use directly
+        const infoMap: Record<string, ModelInfo> = (
+          modelInfoData && typeof modelInfoData === 'object' && !Array.isArray(modelInfoData)
+            ? modelInfoData as Record<string, ModelInfo>
+            : {}
+        )
+        setModelInfoMap(infoMap)
         setError(null)
         setLastSuccess(new Date())
         setCountdown(30)
@@ -78,5 +89,5 @@ export function useDashboardData(sidecarUrl: string): {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sidecarUrl])
 
-  return { models, nodes, error, countdown, lastSuccess, isStale }
+  return { models, nodes, modelInfoMap, error, countdown, lastSuccess, isStale }
 }

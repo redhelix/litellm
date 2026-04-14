@@ -1,13 +1,39 @@
+import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { computeOverview } from '@/lib/aggregate'
 import { formatMs, formatTokensPerSec, formatContextPct } from '@/lib/format'
 import { ToolCallBar } from '@/components/ToolCallBar'
+import { useClients } from '@/hooks/useClients'
 import type { ModelAggregate } from '@/types/api'
 
 interface OverviewPanelProps {
   models: ModelAggregate[]
   isStale: boolean
+  sidecarUrl?: string
+}
+
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true)
+  return (
+    <div className="mb-6">
+      <button
+        type="button"
+        className="flex items-center gap-2 w-full text-left mb-3"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span className="text-sm font-semibold text-zinc-300">{title}</span>
+        <svg
+          className={`w-4 h-4 text-zinc-500 transition-transform ${open ? '' : '-rotate-90'}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div>{children}</div>}
+    </div>
+  )
 }
 
 function avgToolCallRates(models: ModelAggregate[]) {
@@ -42,9 +68,10 @@ const METRIC_HELP: Record<string, string> = {
   'Context %': "Fraction of the model's context window used by this request's prompt.",
 }
 
-export function OverviewPanel({ models, isStale }: OverviewPanelProps) {
+export function OverviewPanel({ models, isStale, sidecarUrl = '' }: OverviewPanelProps) {
   const overview = computeOverview(models)
   const toolRates = avgToolCallRates(models)
+  const { data: clients, loading: clientsLoading } = useClients({ sidecarUrl, window: '24h' })
 
   const metrics = [
     {
@@ -73,42 +100,46 @@ export function OverviewPanel({ models, isStale }: OverviewPanelProps) {
   return (
     <section className={isStale ? 'opacity-50' : ''}>
       <h2 className="text-lg font-semibold mb-4">Overview</h2>
-      <div className="flex gap-4 flex-wrap">
-        {metrics.map(({ label, value, ariaLabel, nullValue }) => (
-          <Card key={label} aria-label={ariaLabel} className="flex-1 min-w-[140px]">
-            <CardContent className="pt-4">
-              <Tooltip>
-                <TooltipTrigger>
-                  <p className="text-xs text-zinc-400 cursor-default w-fit">{label}</p>
-                </TooltipTrigger>
-                <TooltipContent>{METRIC_HELP[label]}</TooltipContent>
-              </Tooltip>
-              {label === 'Context %' && nullValue ? (
+
+      <CollapsibleSection title="Metrics">
+        <div className="flex gap-4 flex-wrap">
+          {metrics.map(({ label, value, ariaLabel, nullValue }) => (
+            <Card key={label} aria-label={ariaLabel} className="flex-1 min-w-[140px]">
+              <CardContent className="pt-4">
                 <Tooltip>
                   <TooltipTrigger>
-                    <p
-                      data-metric-value
-                      className="font-mono text-[28px] font-semibold leading-tight mt-1 cursor-default w-fit"
-                    >
-                      ?
-                    </p>
+                    <p className="text-xs text-zinc-400 cursor-default w-fit">{label}</p>
                   </TooltipTrigger>
-                  <TooltipContent>Context window size unknown for this model alias</TooltipContent>
+                  <TooltipContent>{METRIC_HELP[label]}</TooltipContent>
                 </Tooltip>
-              ) : (
-                <p
-                  data-metric-value
-                  className="font-mono text-[28px] font-semibold leading-tight mt-1"
-                >
-                  {value}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                {label === 'Context %' && nullValue ? (
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <p
+                        data-metric-value
+                        className="font-mono text-[28px] font-semibold leading-tight mt-1 cursor-default w-fit"
+                      >
+                        ?
+                      </p>
+                    </TooltipTrigger>
+                    <TooltipContent>Context window size unknown for this model alias</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <p
+                    data-metric-value
+                    className="font-mono text-[28px] font-semibold leading-tight mt-1"
+                  >
+                    {value}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </CollapsibleSection>
 
-        {/* Tool calls card */}
-        <Card aria-label="Overview Tool calls" className="flex-1 min-w-[180px]">
+      <CollapsibleSection title="Tool Calls">
+        <Card aria-label="Overview Tool calls" className="inline-block min-w-[180px]">
           <CardContent className="pt-4">
             <p className="text-xs text-zinc-400">Tool calls</p>
             <div className="mt-3">
@@ -120,7 +151,27 @@ export function OverviewPanel({ models, isStale }: OverviewPanelProps) {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </CollapsibleSection>
+
+      <CollapsibleSection title="Top Clients">
+        {clientsLoading ? (
+          <p className="text-xs text-zinc-500 animate-pulse">Loading...</p>
+        ) : !clients || clients.length === 0 ? (
+          <p className="text-xs text-zinc-500">No client data</p>
+        ) : (
+          <div className="space-y-1">
+            {clients.map(c => (
+              <div key={c.client} className="flex items-center justify-between text-xs">
+                <span className="font-mono text-zinc-300 truncate max-w-[60%]">{c.client}</span>
+                <span className="text-zinc-500">{c.requests} req</span>
+                {c.error_rate > 0 && (
+                  <span className="text-red-400">{Math.round(c.error_rate * 100)}% err</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
     </section>
   )
 }

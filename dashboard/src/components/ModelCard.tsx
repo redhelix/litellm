@@ -3,11 +3,14 @@ import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ToolCallBar } from '@/components/ToolCallBar'
 import { formatMs, formatTokensPerSec, formatContextPct } from '@/lib/format'
-import type { ModelAggregate } from '@/types/api'
+import type { ModelAggregate, ModelInfo } from '@/types/api'
+import { extractSize, isHfPath, hfUrl, resolveServer, resolveRuntime, resolveUrlPort } from '@/utils/modelMeta'
 
 interface ModelCardProps {
   model: ModelAggregate
   isStale: boolean
+  modelInfo?: ModelInfo
+  healthStatus?: 'up' | 'down' | 'unknown'
 }
 
 interface MetricItem {
@@ -16,7 +19,7 @@ interface MetricItem {
   tooltip: string
 }
 
-export function ModelCard({ model, isStale }: ModelCardProps) {
+export function ModelCard({ model, isStale, modelInfo, healthStatus }: ModelCardProps) {
   const ctxNull = model.avg_context_utilization == null
 
   const metrics: MetricItem[] = [
@@ -56,6 +59,17 @@ export function ModelCard({ model, isStale }: ModelCardProps) {
 
   const contextPct = Math.round((model.avg_context_utilization ?? 0) * 100)
 
+  const backendModel = modelInfo?.backend_model ?? null
+  const apiBase = modelInfo?.api_base ?? null
+  const provider = modelInfo?.provider ?? ''
+
+  const size = backendModel ? extractSize(backendModel) : '?'
+  const hasHfLink = backendModel ? isHfPath(backendModel) : false
+  const hfLink = hasHfLink && backendModel ? hfUrl(backendModel) : null
+  const serverName = resolveServer(apiBase)
+  const runtime = resolveRuntime(provider, apiBase)
+  const urlPort = resolveUrlPort(apiBase)
+
   return (
     <Card
       aria-label={`Model ${model.model}`}
@@ -65,6 +79,43 @@ export function ModelCard({ model, isStale }: ModelCardProps) {
         <CardTitle className="font-mono text-sm font-semibold truncate">
           {model.model}
         </CardTitle>
+
+        {/* Backend model row */}
+        {backendModel && (
+          <p className="text-[11px] text-zinc-500 font-mono truncate mt-0.5">
+            {hasHfLink && hfLink ? (
+              <a href={hfLink} target="_blank" rel="noopener noreferrer"
+                 className="text-blue-400 hover:text-blue-300 underline">
+                {backendModel}
+              </a>
+            ) : backendModel}
+          </p>
+        )}
+
+        {/* Server meta row: only rendered when modelInfo is available */}
+        {modelInfo && (
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span
+              aria-label={`connectivity ${healthStatus ?? 'unknown'}`}
+              className={`inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                healthStatus === 'up'   ? 'bg-green-400' :
+                healthStatus === 'down' ? 'bg-red-400' :
+                                         'bg-zinc-500'
+              }`}
+            />
+            <span className="text-[11px] text-zinc-400">{serverName}</span>
+            <span className="text-[11px] text-zinc-500">·</span>
+            <span className="text-[11px] text-zinc-400">{runtime}</span>
+            {urlPort && (
+              <>
+                <span className="text-[11px] text-zinc-500">·</span>
+                <span className="text-[11px] font-mono text-zinc-400">{urlPort}</span>
+              </>
+            )}
+            <span className="text-[11px] text-zinc-500">·</span>
+            <span className="text-[11px] text-zinc-400">{size}</span>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Metric grid */}
