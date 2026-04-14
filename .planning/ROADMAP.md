@@ -90,7 +90,12 @@
   2. The hardcoded master key in the deployed config is flagged as a security warning — distinct from other drift items, visually prominent.
   3. The benchmark runner fires a synthetic request at each model endpoint on demand, measures TTFT and total latency, and displays results within the dashboard view.
   4. Benchmark history is stored — at least the last 10 benchmark runs are viewable for comparison, showing whether a model has gotten faster or slower across runs.
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 04-01-PLAN.md — Wave 0 RED stubs: vitest stubs for ConfigDriftView, BenchmarkRunner + pytest stubs for /api/config/diff and /api/benchmark/*
+- [ ] 04-02-PLAN.md — Sidecar: config_diff router (DRIFT-01..04), benchmark router (BENCH-01..03), DuckDB tables, CORS POST fix
+- [ ] 04-03-PLAN.md — Frontend: ConfigDriftView + BenchmarkRunner components, api.ts types, GREEN tests, App.tsx wiring
+- [ ] 04-04-PLAN.md — Human-verify checkpoint: end-to-end verification on docker-001
 **UI hint**: yes
 
 ### Phase 5: Containerized Deployment
