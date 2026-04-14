@@ -120,3 +120,32 @@ None — all threat mitigations applied:
 - dashboard/src/components/TrendSection.tsx — EXISTS
 - dashboard/src/App.tsx (modified) — EXISTS
 - Commits 55407b1, 08d0e0d, 7aa4307 — all present in git log
+
+---
+
+## Fix Addendum — 2026-04-14 (post-deploy)
+
+**Problem:** Sections did not appear at http://docker-001:4002 despite all vitest tests passing locally.
+
+**Root causes found:**
+
+1. **Neither container was rebuilt after Phase 3.** The dashboard container still served the Phase 2 build. The sidecar container was missing `routers/trends.py` and `routers/requests.py` entirely — confirmed via `/openapi.json` which only listed 4 routes, not 6.
+
+2. **`tsc -b` failed at Docker build time** because `tsconfig.app.json` included `src/__tests__/` which references vitest globals (`vi`, `describe`, `it`, `expect`) not visible to the app compiler. Fix: added `"exclude": ["src/__tests__"]` to `tsconfig.app.json`.
+
+3. **Type error in RequestLogTable.tsx** — `handleModelChange(value: string)` was rejected by base-ui Select's `onValueChange: (value: string | null, ...) => void`. Fix: changed parameter type to `string | null` and added null guard.
+
+4. **`package-lock.json` out of sync on docker-001** — recharts and redux deps added in Phase 3 were missing from the lock file on the server. Fix: rsync'd the updated lock file before rebuilding.
+
+**Files changed:**
+- `dashboard/tsconfig.app.json` — exclude `src/__tests__`
+- `dashboard/src/components/RequestLogTable.tsx` — fix `handleModelChange` type
+- `dashboard/package-lock.json` — synced to server (recharts/redux deps)
+
+**Fix commit:** 34953af
+
+**Verification:**
+- `GET /openapi.json` on docker-001:4001 now lists `/api/trends` (6 routes total)
+- `GET /api/trends?model=spark-learner&window=7d` returns `{"model":"spark-learner","window":"7d","series":[]}`
+- `GET /api/requests?limit=2` returns `{"rows":[...],"total":[1521],...}`
+- Dashboard container `assets/index-CXt4a564.js` contains "Request Log" string — new build served
