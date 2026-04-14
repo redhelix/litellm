@@ -145,7 +145,7 @@ Plans:
 **Depends on:** Phase 6 (UX foundation must be stable)
 **Requirements:** INT-01, INT-02, INT-03, INT-04, INT-05, INT-06 (from 07-CONTEXT.md decisions D-01..D-05)
 **Plans:** 3 plans
-- [ ] 07-01-PLAN.md — Wave 0 foundation: huggingface_hub dep, intelligence_cache DuckDB table, shadcn Tabs install, App.tsx three-tab restructure, RED pytest stubs (INT-01..INT-06)
+- [x] 07-01-PLAN.md — Wave 0 foundation: huggingface_hub dep, intelligence_cache DuckDB table, shadcn Tabs install, App.tsx three-tab restructure, RED pytest stubs (INT-01..INT-06)
 - [ ] 07-02-PLAN.md — Wave 1 backend: intelligence_job.py (LLM call + HF search + metrics context + 12h scheduled job), routers/intelligence.py (GET + POST query), main.py wiring; turns 6 RED tests GREEN
 - [ ] 07-03-PLAN.md — Wave 2 frontend: useIntelligence hook, IntelligenceTab (5 sections per UI-SPEC), App.tsx wiring, human-verify on docker-001
 
