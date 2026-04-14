@@ -147,7 +147,7 @@ Plans:
 **Plans:** 3 plans
 - [x] 07-01-PLAN.md — Wave 0 foundation: huggingface_hub dep, intelligence_cache DuckDB table, shadcn Tabs install, App.tsx three-tab restructure, RED pytest stubs (INT-01..INT-06)
 - [x] 07-02-PLAN.md — Wave 1 backend: intelligence_job.py (LLM call + HF search + metrics context + 12h scheduled job), routers/intelligence.py (GET + POST query), main.py wiring; turns 6 RED tests GREEN
-- [ ] 07-03-PLAN.md — Wave 2 frontend: useIntelligence hook, IntelligenceTab (5 sections per UI-SPEC), App.tsx wiring, human-verify on docker-001
+- [x] 07-03-PLAN.md — Wave 2 frontend: useIntelligence hook, IntelligenceTab (5 sections per UI-SPEC), App.tsx wiring, human-verify on docker-001
 
 Items captured:
 - LLM-based anomaly detection on metrics (latency spikes, error rate increases, context utilization trends)
