@@ -176,6 +176,23 @@ Full-width at 1280px as established in Phase 2.
 
 ---
 
+## Visuals
+
+**Primary focal point:** The security `Alert` banner in Config Drift — rendered
+at the top of the drift list in orange-500, it is the highest-priority visual
+element in Phase 4 and must be immediately visible without scrolling when drift
+data loads.
+
+**Secondary focal point:** The "Run benchmark" button in Benchmark Runner —
+positioned in the section header row (right-aligned), it is the sole
+call-to-action for this phase and carries the accent (blue-500) focus ring to
+draw attention.
+
+All other elements (diff rows, benchmark result table, history list) are
+supporting detail and should not compete visually with these two focal points.
+
+---
+
 ## Component Inventory
 
 ### Inherited from Phases 2 and 3 (no changes)
@@ -366,7 +383,7 @@ Inherits all Phase 2 and Phase 3 copy. Phase 4 additions:
 | Benchmark confirmation title | `Run benchmark across all models?` |
 | Benchmark confirmation body | `This will fire a synthetic request at each of the {N} model endpoints. Results will be available within 60 seconds.` |
 | Benchmark confirmation action | `Run benchmark` |
-| Benchmark confirmation cancel | `Cancel` |
+| Benchmark confirmation cancel | `Don't run` |
 | Benchmark in-progress label | `Running…` |
 | Benchmark history heading | `History` |
 | Benchmark history run label | `Run #{N}` |
@@ -399,7 +416,7 @@ effect (the benchmark trigger). Config drift is read-only.
 | Page mount — config drift | Fetch `/api/config/diff` immediately; show `animate-pulse` skeleton in diff list while loading |
 | Page mount — benchmark | Fetch `/api/benchmark/latest` and `/api/benchmark/history?limit=10` immediately; show latest results if any exist |
 | Click "Run benchmark" | Open `AlertDialog` confirmation; do NOT fire the request yet |
-| Click "Cancel" in dialog | Close dialog; no request fired; button returns to idle |
+| Click "Don't run" in dialog | Close dialog; no request fired; button returns to idle |
 | Click "Run benchmark" in dialog | Close dialog; POST `/api/benchmark/run`; button enters disabled state with label `Running…`; all result rows enter `animate-pulse` status |
 | Benchmark in-progress | "Run benchmark" button is `disabled`, `opacity-70`, `cursor-not-allowed`; poll `/api/benchmark/latest` every 5 seconds until `completed_at` is not null |
 | Benchmark complete | Stop polling; render final results table; show green/amber/red status badges; re-enable "Run benchmark" button; add new run to history list |
@@ -418,7 +435,7 @@ effect (the benchmark trigger). Config drift is read-only.
 
 ```
 idle  →  [click]  →  confirming (AlertDialog open)
-confirming  →  [cancel]  →  idle
+confirming  →  [Don't run]  →  idle
 confirming  →  [confirm]  →  running (disabled, "Running…", polling)
 running  →  [complete]  →  idle (results updated)
 running  →  [error]  →  idle (error toast shown)
@@ -445,7 +462,7 @@ Inherits all Phase 2 and Phase 3 accessibility rules, plus:
 - "Run benchmark" `<Button>` has `aria-label="Run benchmark across all models"`
   in idle state and `aria-label="Benchmark in progress"` in running state
 - `<AlertDialog>` traps focus within the modal when open; `Escape` key closes
-  without firing the request (same as clicking Cancel)
+  without firing the request (same as clicking "Don't run")
 - `AlertDialogAction` ("Run benchmark") has `aria-label="Confirm: run benchmark"`
 - Diff row list has `role="list"` and each row has `role="listitem"`
 - Severity icons (△, ✗, ⚠) are `aria-hidden="true"` — text labels (`MISMATCH`,
@@ -495,6 +512,8 @@ the inline Alert approach is preferred for this local tool.
 | Orange-500 for security | Phase 4 researcher decision — distinct from amber (warning) and red (error) |
 | 5-second polling interval during benchmark | Researcher default — fast enough for 60-second max run per ROADMAP success criterion 3 |
 | No auto-refresh for config diff | Researcher decision — config diffs are not time-sensitive |
+| "Don't run" cancel label | Checker revision — avoids generic "Cancel" label |
+| Focal point declarations | Checker revision — Visuals section added |
 
 ---
 
