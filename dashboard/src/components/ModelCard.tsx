@@ -17,36 +17,40 @@ interface MetricItem {
 }
 
 export function ModelCard({ model, isStale }: ModelCardProps) {
+  const ctxNull = model.avg_context_utilization == null
+
   const metrics: MetricItem[] = [
     {
       label: 'p50 TTFT',
       value: formatMs(model.ttft_p50),
-      tooltip: `p50 TTFT — ${formatMs(model.ttft_p50)}`,
+      tooltip: 'p50 TTFT — 50th percentile time to first token; latency before streaming begins.',
     },
     {
       label: 'p95 TTFT',
       value: formatMs(model.ttft_p95),
-      tooltip: `p95 TTFT — ${formatMs(model.ttft_p95)}`,
+      tooltip: 'p95 TTFT — 95th percentile time to first token; worst-case for 1 in 20 requests.',
     },
     {
       label: 'p50 latency',
       value: formatMs(model.total_latency_p50),
-      tooltip: `p50 total latency — ${formatMs(model.total_latency_p50)}`,
+      tooltip: 'p50 total latency — 50th percentile end-to-end response time (median request).',
     },
     {
       label: 'p95 latency',
       value: formatMs(model.total_latency_p95),
-      tooltip: `p95 total latency — ${formatMs(model.total_latency_p95)}`,
+      tooltip: 'p95 total latency — 95th percentile end-to-end response time; worst-case for 1 in 20.',
     },
     {
       label: 'tok/s',
       value: formatTokensPerSec(model.tokens_per_sec),
-      tooltip: `Tokens per second — ${formatTokensPerSec(model.tokens_per_sec)}`,
+      tooltip: 'Tokens per second — generation throughput for this model.',
     },
     {
       label: 'ctx %',
-      value: formatContextPct(model.avg_context_utilization),
-      tooltip: `Context utilization — ${formatContextPct(model.avg_context_utilization)}`,
+      value: ctxNull ? '?' : formatContextPct(model.avg_context_utilization),
+      tooltip: ctxNull
+        ? 'Context window size unknown for this model alias'
+        : "Context utilization — fraction of this model's context window used by the prompt.",
     },
   ]
 

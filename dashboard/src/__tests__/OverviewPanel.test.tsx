@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { OverviewPanel } from '@/components/OverviewPanel'
 import type { ModelAggregate } from '@/types/api'
 
@@ -65,12 +66,12 @@ describe('OverviewPanel', () => {
     expect(segments.length).toBe(3)
   })
 
-  it('O5: Empty models renders em-dashes and no-data tool call bar', () => {
+  it('O5: Empty models renders em-dashes or ? and no-data tool call bar', () => {
     const { container } = render(<OverviewPanel models={[]} isStale={false} />)
-    // All cells should show "—"
-    const emdashes = Array.from(container.querySelectorAll('[data-metric-value]'))
-      .filter((el) => el.textContent === '—')
-    expect(emdashes.length).toBeGreaterThanOrEqual(4)
+    // Numeric metrics show "—" or "?" (ctx% shows ? when null)
+    const metricValues = Array.from(container.querySelectorAll('[data-metric-value]'))
+    const nullValues = metricValues.filter((el) => el.textContent === '—' || el.textContent === '?')
+    expect(nullValues.length).toBeGreaterThanOrEqual(3)
     // Tool call bar in no-data state
     const noData = container.querySelector('[data-no-data]')
     expect(noData).toBeTruthy()
@@ -89,5 +90,36 @@ describe('OverviewPanel', () => {
     expect(screen.getByLabelText('Overview Tokens/sec')).toBeTruthy()
     expect(screen.getByLabelText('Overview Context %')).toBeTruthy()
     expect(screen.getByLabelText('Overview Tool calls')).toBeTruthy()
+  })
+
+  it('O8: p50 TTFT label has tooltip containing "50th percentile"', async () => {
+    const user = userEvent.setup({ delay: null })
+    render(<OverviewPanel models={[makeModel({ ttft_p50: 100 })]} isStale={false} />)
+    const label = screen.getByText('p50 TTFT')
+    await user.hover(label)
+    await screen.findByText(/50th percentile/i)
+  })
+
+  it('O9: p95 total latency label tooltip contains "1 in 20"', async () => {
+    const user = userEvent.setup({ delay: null })
+    render(<OverviewPanel models={[makeModel({ total_latency_p95: 500 })]} isStale={false} />)
+    const label = screen.getByText('p95 total latency')
+    await user.hover(label)
+    await screen.findByText(/1 in 20/i)
+  })
+
+  it('O10: Context % label tooltip contains "context window"', async () => {
+    const user = userEvent.setup({ delay: null })
+    render(<OverviewPanel models={[makeModel({ avg_context_utilization: 0.5 })]} isStale={false} />)
+    const label = screen.getByText('Context %')
+    await user.hover(label)
+    await screen.findByText(/context window/i)
+  })
+
+  it('O11: null avg_context_utilization renders "?" not em-dash in Context % card', () => {
+    render(<OverviewPanel models={[makeModel({ avg_context_utilization: null })]} isStale={false} />)
+    const ctxCard = screen.getByLabelText('Overview Context %')
+    expect(ctxCard.textContent).toContain('?')
+    expect(ctxCard.textContent).not.toContain('—')
   })
 })
