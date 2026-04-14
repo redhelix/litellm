@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 08-model-client-visibility
 source: 08-01-SUMMARY.md, 08-02-SUMMARY.md
 started: 2026-04-14T15:45:00Z
-updated: 2026-04-14T15:45:00Z
+updated: 2026-04-14T20:30:00Z
 ---
 
 ## Current Test
 
-number: 4
-name: ModelCard connectivity ball
-expected: |
-  Each local ModelCard has a small colored circle: green = up, red = down. Cloud models show grey.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
