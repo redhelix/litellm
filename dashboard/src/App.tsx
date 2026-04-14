@@ -8,6 +8,8 @@ import { NodeGrid } from '@/components/NodeGrid'
 import { Separator } from '@/components/ui/separator'
 import { RequestLogTable } from '@/components/RequestLogTable'
 import { TrendSection } from '@/components/TrendSection'
+import ConfigDriftView from './components/ConfigDriftView'
+import BenchmarkRunner from './components/BenchmarkRunner'
 
 const SIDECAR_URL = (import.meta.env.VITE_SIDECAR_URL as string) ?? 'http://docker-001:4001'
 
@@ -62,6 +64,11 @@ function App() {
       <section aria-labelledby="trends-heading">
         <TrendSection sidecarUrl={SIDECAR_URL} models={modelNames} />
       </section>
+
+      <div className="my-8 border-t border-white/10" />
+      <ConfigDriftView />
+      <div className="my-8 border-t border-white/10" />
+      <BenchmarkRunner />
     </div>
   )
 }

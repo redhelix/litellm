@@ -55,3 +55,35 @@ export interface TrendResponse {
   window: string
   series: TrendPoint[]
 }
+
+export interface DriftItem {
+  key_path: string
+  deployed_value: string
+  repo_value: string
+  severity: 'security' | 'mismatch' | 'missing'
+}
+
+export interface ConfigDiffResponse {
+  items: DriftItem[]
+  last_checked: string
+}
+
+export interface BenchmarkResult {
+  model: string
+  ttft_ms: number | null
+  total_latency_ms: number | null
+  tokens_per_sec: number | null
+  status: 'ok' | 'error' | 'timeout'
+  error_message?: string
+}
+
+export interface BenchmarkRun {
+  run_id: string
+  started_at: string
+  completed_at: string | null
+  results: BenchmarkResult[]
+}
+
+export interface BenchmarkHistoryResponse {
+  runs: BenchmarkRun[]
+}
