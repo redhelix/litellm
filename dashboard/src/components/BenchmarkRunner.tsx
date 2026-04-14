@@ -83,6 +83,7 @@ export default function BenchmarkRunner() {
   const [runState, setRunState] = useState<RunState>('idle')
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   const fetchLatest = useCallback(async () => {
     const r = await fetch(`${SIDECAR_URL}/api/benchmark/latest`)
@@ -116,6 +117,7 @@ export default function BenchmarkRunner() {
   }, [runState, fetchLatest, fetchHistory])
 
   const handleConfirmRun = async () => {
+    setDialogOpen(false)
     setRunState('running')
     setError(null)
     try {
@@ -137,7 +139,7 @@ export default function BenchmarkRunner() {
     <Card className="bg-zinc-900 border-white/10">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <h2 className="text-lg font-semibold">Benchmark Runner</h2>
-        <AlertDialog>
+        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <AlertDialogTrigger
             render={
               <Button
