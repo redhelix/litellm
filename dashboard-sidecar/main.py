@@ -19,6 +19,8 @@ from routers.latency import router as latency_router
 from routers.trends import router as trends_router
 from routers.config_diff import router as config_diff_router
 from routers.benchmark import router as benchmark_router
+from routers.clients import router as clients_router
+from routers.model_health import router as model_health_router, ping_models_job
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
@@ -65,8 +67,9 @@ async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
     scheduler.add_job(_poll_job, "interval", seconds=30, id="poll", max_instances=1)
     scheduler.add_job(_scrape_job, "interval", seconds=60, id="scrape", max_instances=1)
+    scheduler.add_job(ping_models_job, "interval", seconds=30, id="ping_models", max_instances=1)
     scheduler.start()
-    log.info("scheduler started: poll=30s, scrape=60s")
+    log.info("scheduler started: poll=30s, scrape=60s, ping=30s")
     yield
     if scheduler:
         scheduler.shutdown(wait=False)
@@ -94,3 +97,5 @@ app.include_router(latency_router)
 app.include_router(trends_router)
 app.include_router(config_diff_router)
 app.include_router(benchmark_router)
+app.include_router(clients_router)
+app.include_router(model_health_router)
