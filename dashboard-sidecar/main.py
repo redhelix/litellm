@@ -17,6 +17,8 @@ from routers.models import router as models_router
 from routers.nodes import router as nodes_router
 from routers.latency import router as latency_router
 from routers.trends import router as trends_router
+from routers.config_diff import router as config_diff_router
+from routers.benchmark import router as benchmark_router
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
@@ -75,7 +77,7 @@ app = FastAPI(lifespan=lifespan, title="dashboard-sidecar")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://docker-001:4002"],
-    allow_methods=["GET"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -90,3 +92,5 @@ app.include_router(models_router)
 app.include_router(nodes_router)
 app.include_router(latency_router)
 app.include_router(trends_router)
+app.include_router(config_diff_router)
+app.include_router(benchmark_router)

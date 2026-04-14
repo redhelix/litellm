@@ -55,6 +55,26 @@ def init_schema(conn: duckdb.DuckDBPyConnection) -> None:
     conn.execute("CREATE INDEX IF NOT EXISTS idx_requests_model ON requests (model, startTime DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_scraped ON latency_snapshots (scraped_at DESC)")
     conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_model ON latency_snapshots (model, scraped_at DESC)")
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS benchmark_runs (
+            run_id      VARCHAR PRIMARY KEY,
+            started_at  TIMESTAMPTZ NOT NULL,
+            completed_at TIMESTAMPTZ
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS benchmark_results (
+            id               VARCHAR PRIMARY KEY,
+            run_id           VARCHAR NOT NULL,
+            model            VARCHAR NOT NULL,
+            ttft_ms          INTEGER,
+            total_latency_ms INTEGER,
+            tokens_per_sec   DOUBLE,
+            status           VARCHAR NOT NULL,
+            error_message    VARCHAR,
+            FOREIGN KEY (run_id) REFERENCES benchmark_runs(run_id)
+        )
+    """)
 
 
 def query(sql: str, params: tuple | None = None) -> list[tuple]:
