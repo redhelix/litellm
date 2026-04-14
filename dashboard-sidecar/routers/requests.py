@@ -33,6 +33,7 @@ def list_requests(
     sort_by: str = Query("startTime"),
     sort_dir: str = Query("desc"),
     status_filter: str | None = Query(None),
+    client_filter: str | None = Query(None),
 ):
     if window not in WINDOW_TO_SQL:
         raise HTTPException(status_code=400, detail="invalid window")
@@ -60,6 +61,12 @@ def list_requests(
         where += " AND tool_call_status = ?"
         params_count.append(status_filter)
         params_rows.append(status_filter)
+
+    if client_filter is not None:
+        like_val = f"%{client_filter}%"
+        where += " AND (api_key_alias LIKE ? OR requester_ip_address LIKE ?)"
+        params_count += [like_val, like_val]
+        params_rows += [like_val, like_val]
 
     params_rows += [limit, offset]
 

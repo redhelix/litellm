@@ -78,6 +78,7 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
   const [sortBy, setSortBy] = useState<'startTime' | 'ttft_ms' | 'total_latency_ms'>('startTime')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const [statusFilter, setStatusFilter] = useState<'success' | 'repaired' | 'failed' | null>(null)
+  const [clientFilter, setClientFilter] = useState<string>('')
 
   const limit = 25
   const offset = (page - 1) * limit
@@ -90,6 +91,7 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
     sortBy,
     sortDir,
     statusFilter,
+    clientFilter: clientFilter.trim() || null,
   })
 
   const totalPages = Math.ceil((data?.total ?? 0) / limit)
@@ -103,6 +105,11 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
 
   function handleStatusChange(value: string | null) {
     setStatusFilter(!value || value === '__all__' ? null : value as 'success' | 'repaired' | 'failed')
+    setPage(1)
+  }
+
+  function handleClientFilter(e: React.ChangeEvent<HTMLInputElement>) {
+    setClientFilter(e.target.value)
     setPage(1)
   }
 
@@ -178,6 +185,14 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
               <SelectItem value="failed">failed</SelectItem>
             </SelectContent>
           </Select>
+          <input
+            type="text"
+            value={clientFilter}
+            onChange={handleClientFilter}
+            placeholder="Filter by key or IP"
+            aria-label="Filter by key or IP"
+            className="h-9 w-44 rounded-md border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          />
         </div>
       </div>
 
