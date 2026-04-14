@@ -4,9 +4,9 @@ services:
     container_name: litellm-db
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=litellm
-      - POSTGRES_PASSWORD=litellm-synergy-2026
-      - POSTGRES_DB=litellm
+      - POSTGRES_USER=${POSTGRES_USER:-litellm}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-litellm}
     volumes:
       - litellm-pgdata:/var/lib/postgresql/data
     networks:
@@ -58,7 +58,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY}
-      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-litellm}?connect_timeout=10
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - STORE_MODEL_IN_DB=False
@@ -116,7 +116,7 @@ services:
       - dashboard-duckdb:/data
       - /tmp/tool_repairs.jsonl:/tmp/tool_repairs.jsonl:ro
     environment:
-      - DATABASE_URL=postgresql://litellm:litellm-synergy-2026@db:5432/litellm?connect_timeout=10
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-litellm}?connect_timeout=10
       - PROMETHEUS_URL=http://192.168.50.117:9090
       - CONFIG_YAML_PATH=/app/config.yaml
       - TOOL_REPAIRS_LOG=/tmp/tool_repairs.jsonl
