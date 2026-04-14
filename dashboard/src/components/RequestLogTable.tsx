@@ -75,6 +75,9 @@ function RelativeTime({ iso }: { iso: string }) {
 export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestLogTableProps) {
   const [page, setPage] = useState(1)
   const [selectedModel, setSelectedModel] = useState<string | null>(null)
+  const [sortBy, setSortBy] = useState<'startTime' | 'ttft_ms' | 'total_latency_ms'>('startTime')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [statusFilter, setStatusFilter] = useState<'success' | 'repaired' | 'failed' | null>(null)
 
   const limit = 25
   const offset = (page - 1) * limit
@@ -84,6 +87,9 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
     model: selectedModel,
     limit,
     offset,
+    sortBy,
+    sortDir,
+    statusFilter,
   })
 
   const totalPages = Math.ceil((data?.total ?? 0) / limit)
@@ -92,6 +98,11 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
 
   function handleModelChange(value: string | null) {
     setSelectedModel(value === '__all__' || value === null ? null : value)
+    setPage(1)
+  }
+
+  function handleStatusChange(value: string) {
+    setStatusFilter(value === '__all__' ? null : value as 'success' | 'repaired' | 'failed')
     setPage(1)
   }
 
@@ -109,26 +120,65 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
     }
   }
 
+  function SortableHeader({ label, column }: { label: string; column: 'startTime' | 'ttft_ms' | 'total_latency_ms' }) {
+    const active = sortBy === column
+    const arrow = active ? (sortDir === 'asc' ? '↑' : '↓') : ''
+    return (
+      <button
+        type="button"
+        className="text-zinc-400 hover:text-zinc-200 inline-flex items-center gap-1"
+        aria-label={`Sort by ${label}`}
+        onClick={() => {
+          if (active) {
+            setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+          } else {
+            setSortBy(column)
+            setSortDir('desc')
+          }
+          setPage(1)
+        }}
+      >
+        {label} <span aria-hidden="true">{arrow}</span>
+      </button>
+    )
+  }
+
   const rows = data?.rows ?? []
 
   return (
     <div id="request-log">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">Request Log</h2>
-        <Select
-          value={selectedModel ?? '__all__'}
-          onValueChange={handleModelChange}
-        >
-          <SelectTrigger className="w-48" aria-label="Filter by model">
-            <SelectValue placeholder="All models" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__all__">All models</SelectItem>
-            {modelOptions.map(m => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2">
+          <Select
+            value={selectedModel ?? '__all__'}
+            onValueChange={handleModelChange}
+          >
+            <SelectTrigger className="w-48" aria-label="Filter by model">
+              <SelectValue placeholder="All models" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All models</SelectItem>
+              {modelOptions.map(m => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={statusFilter ?? '__all__'}
+            onValueChange={handleStatusChange}
+          >
+            <SelectTrigger className="w-44" aria-label="Filter by status">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All statuses</SelectItem>
+              <SelectItem value="success">success</SelectItem>
+              <SelectItem value="repaired">repaired</SelectItem>
+              <SelectItem value="failed">failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {error && (
@@ -169,11 +219,17 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
             <TableHeader>
               <TableRow className="border-zinc-800">
                 <TableHead className="text-zinc-400">Model</TableHead>
-                <TableHead className="text-zinc-400">TTFT</TableHead>
-                <TableHead className="text-zinc-400">Latency</TableHead>
+                <TableHead className="text-zinc-400">
+                  <SortableHeader label="TTFT" column="ttft_ms" />
+                </TableHead>
+                <TableHead className="text-zinc-400">
+                  <SortableHeader label="Latency" column="total_latency_ms" />
+                </TableHead>
                 <TableHead className="text-zinc-400">Ctx%</TableHead>
                 <TableHead className="text-zinc-400">Tool Call</TableHead>
-                <TableHead className="text-zinc-400">Time</TableHead>
+                <TableHead className="text-zinc-400">
+                  <SortableHeader label="Time" column="startTime" />
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -184,12 +240,29 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
                 const startTime = (row as { startTime?: string; timestamp?: string }).startTime
                   ?? (row as { startTime?: string; timestamp?: string }).timestamp
                   ?? ''
+                const hasError = !!row.error_message
                 return (
-                  <TableRow key={key} className="border-zinc-800">
-                    <TableCell className="font-mono text-xs">{row.model}</TableCell>
+                  <TableRow key={key} className={`border-zinc-800 ${hasError ? 'bg-red-500/10' : ''}`}>
+                    <TableCell className="font-mono text-xs">
+                      {hasError ? (
+                        <Tooltip>
+                          <TooltipTrigger aria-label={row.error_message ?? undefined}>
+                            <span className="cursor-default">{row.model}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>{row.error_message}</TooltipContent>
+                        </Tooltip>
+                      ) : row.model}
+                    </TableCell>
                     <TableCell className="text-xs">{fmtMs(row.ttft_ms)}</TableCell>
                     <TableCell className="text-xs">{fmtMs(row.total_latency_ms)}</TableCell>
-                    <TableCell className="text-xs">{fmtPct(row.context_utilization)}</TableCell>
+                    <TableCell className="text-xs">
+                      {row.context_utilization == null ? (
+                        <Tooltip>
+                          <TooltipTrigger><span className="cursor-default">?</span></TooltipTrigger>
+                          <TooltipContent>Context window size unknown for this model alias</TooltipContent>
+                        </Tooltip>
+                      ) : fmtPct(row.context_utilization)}
+                    </TableCell>
                     <TableCell><ToolBadge status={row.tool_call_status} /></TableCell>
                     <TableCell><RelativeTime iso={startTime} /></TableCell>
                   </TableRow>
