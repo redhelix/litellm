@@ -18,6 +18,7 @@
 - [ ] **Phase 5: Containerized Deployment** — Production container on docker-001, master key server-side only, local network access
 - [ ] **Phase 6: Dashboard UX Enhancements** — Error display, sorting/filtering, context utilization fix, tooltips, model metadata
 - [ ] **Phase 7: LLM-Powered Intelligence Layer** — Anomaly detection, automated diagnosis, HF model monitoring, NL Q&A
+- [ ] **Phase 8: Model & Client Visibility** — Request log client columns (key/IP), top clients panel, collapsible overview sections, ModelCard enrichment (HF link, server name, runtime, URL:port, connectivity ball)
 
 ---
 
@@ -128,6 +129,17 @@ Items deferred to Phase 6 backlog (NOT planned this round):
 - Show server names of deployed models
 - Show model metadata per model card
 
+### Phase 8: Model & Client Visibility
+**Goal:** Request log shows who made each request (API key alias + requester IP). Overview panel tracks top clients. All overview sections are collapsible. ModelCard shows enriched model metadata: full backend model, HuggingFace link, model size, server name, runtime, URL:port, and a live red/green connectivity indicator pinged every 30s.
+**Depends on:** Phase 6 (UX foundation, sidecar endpoints pattern established)
+**Requirements:** D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08 (from 08-CONTEXT.md)
+**Plans:** 1/2 plans executed
+Plans:
+- [x] 08-01-PLAN.md — Wave 1 backend: DB migration (requester_ip_address), poller, config_loader MODEL_INFO_MAP, /api/clients, /api/model-info, /api/model-health + ping scheduler (D-01, D-02, D-04, D-07, D-08)
+- [ ] 08-02-PLAN.md — Wave 2 frontend: api.ts types, modelMeta.ts utility + tests, useModelHealth + useClients hooks, RequestLogTable Key/IP columns, OverviewPanel collapsible sections + Top Clients, ModelCard enrichment (D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08)
+
+---
+
 ### Phase 7: LLM-Powered Intelligence Layer
 **Goal:** Use LLMs to autonomously monitor lab health, diagnose anomalies, recommend config/model changes, and surface ideal new model releases from Hugging Face.
 **Depends on:** Phase 6 (UX foundation must be stable)
@@ -154,6 +166,7 @@ Items captured:
 | 3. Request Log + Trend Views | 0/4 | Planned | - |
 | 4. Config Drift + Benchmark Runner | 0/? | Not started | - |
 | 5. Containerized Deployment | 0/2 | Planned | - |
+| 8. Model & Client Visibility | 1/2 | In Progress|  |
 
 ---
 
@@ -210,4 +223,4 @@ Items captured:
 ---
 
 *Roadmap created: 2026-04-13*
-*Last updated: 2026-04-13 after Phase 5 planning*
+*Last updated: 2026-04-14 after Phase 8 planning*
