@@ -90,8 +90,8 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
   const isFirstPage = page === 1
   const isLastPage = page >= totalPages || totalPages === 0
 
-  function handleModelChange(value: string) {
-    setSelectedModel(value === '__all__' ? null : value)
+  function handleModelChange(value: string | null) {
+    setSelectedModel(value === '__all__' || value === null ? null : value)
     setPage(1)
   }
 
