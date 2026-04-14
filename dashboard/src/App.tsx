@@ -14,6 +14,7 @@ import BenchmarkRunner from './components/BenchmarkRunner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { resolveServer } from '@/utils/modelMeta'
+import { IntelligenceTab } from '@/components/IntelligenceTab'
 
 const SIDECAR_URL = (import.meta.env.VITE_SIDECAR_URL as string) ?? 'http://docker-001:4001'
 
@@ -119,12 +120,9 @@ function App() {
           </section>
         </TabsContent>
 
-        {/* Tab: Intelligence (placeholder — wired in Plan 03) */}
+        {/* Tab: Intelligence */}
         <TabsContent value="intelligence">
-          <div className="rounded-lg border border-zinc-800 p-8 text-center">
-            <p className="text-sm text-zinc-300">Intelligence tab</p>
-            <p className="text-xs text-zinc-500 mt-1">Wired in Plan 03 — backend and Q&amp;A coming online.</p>
-          </div>
+          <IntelligenceTab sidecarUrl={SIDECAR_URL} />
         </TabsContent>
       </Tabs>
     </div>
