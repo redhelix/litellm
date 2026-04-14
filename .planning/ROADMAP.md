@@ -16,6 +16,8 @@
 - [ ] **Phase 3: Request Log + Trend Views** — Paginated request log table and 7/30-day trend charts
 - [ ] **Phase 4: Config Drift + Benchmark Runner** — Config diff surface and on-demand benchmark trigger
 - [ ] **Phase 5: Containerized Deployment** — Production container on docker-001, master key server-side only, local network access
+- [ ] **Phase 6: Dashboard UX Enhancements** — Error display, sorting/filtering, context utilization fix, tooltips, model metadata
+- [ ] **Phase 7: LLM-Powered Intelligence Layer** — Anomaly detection, automated diagnosis, HF model monitoring, NL Q&A
 
 ---
 
@@ -110,6 +112,36 @@ Plans:
 **Plans**: TBD
 **UI hint**: no
 
+### Phase 6: Dashboard UX Enhancements
+**Goal:** Polish the request log and dashboard views with richer data, better UX, and inline help.
+**Depends on:** Phase 5 (all features deployed before UX polish)
+**Requirements:** TBD
+**Plans:** TBD
+
+Items captured:
+- Show error messages and relevant metadata in the request log view
+- Differentiate success vs. error requests visually
+- Fix context utilization not populating
+- Add sorting and filtering to tables
+- Fix "last request" timestamp accuracy
+- Show server names of deployed models
+- Show model metadata per model card
+- Add help tooltips explaining metrics (e.g., p95, p50, TTFT, ctx%)
+
+### Phase 7: LLM-Powered Intelligence Layer
+**Goal:** Use LLMs to autonomously monitor lab health, diagnose anomalies, recommend config/model changes, and surface ideal new model releases from Hugging Face.
+**Depends on:** Phase 6 (UX foundation must be stable)
+**Requirements:** TBD
+**Plans:** TBD
+
+Items captured:
+- LLM-based anomaly detection on metrics (latency spikes, error rate increases, context utilization trends)
+- Automated diagnosis: root cause suggestions when a model degrades
+- Config change recommendations (routing strategy, max_tokens, context window settings)
+- Model swap recommendations based on benchmark results vs. alternatives
+- HuggingFace monitoring: surface new model releases that fit the current deployment profile
+- Natural language Q&A interface over collected metrics
+
 ---
 
 ## Progress Table
@@ -174,44 +206,6 @@ Plans:
 | FastAPI sidecar (Python) | Consistent with existing Python stack; avoids Node runtime just for the sidecar |
 
 ---
-
-## Backlog
-
-### Phase 999.1: Dashboard UX Enhancements (BACKLOG)
-
-**Goal:** Polish the request log and dashboard views with richer data, better UX, and inline help.
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Items captured:
-- Show error messages and relevant metadata in the request log view
-- Differentiate success vs. error requests visually
-- Fix context utilization not populating
-- Add sorting and filtering to tables
-- Fix "last request" timestamp accuracy
-- Show server names of deployed models
-- Show model metadata per model card
-- Add help tooltips explaining metrics (e.g., p95, p50, TTFT, ctx%)
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
-
-### Phase 999.2: LLM-Powered Intelligence Layer (BACKLOG)
-
-**Goal:** Use LLMs to autonomously monitor lab health, diagnose anomalies, recommend config/model changes, and surface ideal new model releases from Hugging Face.
-**Requirements:** TBD
-**Plans:** 0 plans
-
-Items captured:
-- LLM-based anomaly detection on metrics (latency spikes, error rate increases, context utilization trends)
-- Automated diagnosis: root cause suggestions when a model degrades
-- Config change recommendations (routing strategy, max_tokens, context window settings)
-- Model swap recommendations based on benchmark results vs. alternatives
-- HuggingFace monitoring: surface new model releases that fit the current deployment profile
-- Natural language Q&A interface over collected metrics
-
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
 
 ---
 
