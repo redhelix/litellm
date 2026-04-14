@@ -32,9 +32,15 @@ def init_schema(conn: duckdb.DuckDBPyConnection) -> None:
             tool_call_status    TEXT,
             context_utilization DOUBLE,
             api_key_alias       TEXT,
-            team_alias          TEXT
+            team_alias          TEXT,
+            error_message       TEXT
         )
     """)
+    # Backward-compat migration: add error_message to existing volume-mounted DBs
+    try:
+        conn.execute("ALTER TABLE requests ADD COLUMN error_message TEXT")
+    except duckdb.Error:
+        pass  # column already exists
     conn.execute("CREATE SEQUENCE IF NOT EXISTS latency_snapshots_seq START 1")
     conn.execute("""
         CREATE TABLE IF NOT EXISTS latency_snapshots (
