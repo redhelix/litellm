@@ -3,7 +3,13 @@ import signal
 import threading
 
 _max_ctx: dict[str, int] = {}
+_model_info: dict[str, dict] = {}
 _lock = threading.Lock()
+
+CLOUD_HOSTS = {
+    "api.openai.com", "openrouter.ai", "generativelanguage.googleapis.com",
+    "api.anthropic.com", "api.perplexity.ai",
+}
 
 # Fallback context window sizes for deployed aliases whose YAML entries may not
 # declare max_input_tokens (e.g., embedding models, proxy aliases).
@@ -61,10 +67,34 @@ def load_config(path: str = "/app/config.yaml") -> None:
         global _max_ctx
         _max_ctx = merged
 
+    # Build MODEL_INFO_MAP: first entry per alias wins
+    info_map: dict[str, dict] = {}
+    for entry in cfg.get("model_list", []):
+        name = entry.get("model_name")
+        if not name or name in info_map:
+            continue
+        lp = entry.get("litellm_params") or {}
+        backend_model = lp.get("model", "")
+        api_base = lp.get("api_base") or None
+        provider = backend_model.split("/")[0] if "/" in backend_model else ""
+        info_map[name] = {
+            "backend_model": backend_model,
+            "api_base": api_base,
+            "provider": provider,
+        }
+    with _lock:
+        global _model_info
+        _model_info = info_map
+
 
 def get_max_ctx() -> dict[str, int]:
     with _lock:
         return dict(_max_ctx)
+
+
+def get_model_info_map() -> dict[str, dict]:
+    with _lock:
+        return dict(_model_info)
 
 
 def register_sighup(path: str) -> None:
