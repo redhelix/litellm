@@ -75,10 +75,10 @@
   2. Trend charts show 7-day and 30-day performance history per model for latency (p95), context utilization, and error/repair rate — rendered as separate sparklines per model alias, not a single overlapping multi-series chart.
   3. All trend queries are bounded — a 30-day query does not full-scan the `requests` table and returns within 2 seconds.
 **Plans**: 4 plans
-- [ ] 03-01-PLAN.md — Wave 0 RED stubs: vitest stubs for RequestLogTable, TrendSection, useRequestLog, useTrends + pytest stubs for /api/requests and /api/trends (Wave 1)
-- [ ] 03-02-PLAN.md — Sidecar: update /api/requests (model filter + total count + offset cap) + new /api/trends router (VIEW-03, VIEW-04 backend) (Wave 1)
-- [ ] 03-03-PLAN.md — Frontend: recharts + shadcn installs, api.ts type extensions, useRequestLog + useTrends hooks (Wave 2)
-- [ ] 03-04-PLAN.md — Frontend: RequestLogTable component (VIEW-03), TrendSection component (VIEW-04), App.tsx wiring, human-verify checkpoint (Wave 2)
+- [x] 03-01-PLAN.md — Wave 0 RED stubs: vitest stubs for RequestLogTable, TrendSection, useRequestLog, useTrends + pytest stubs for /api/requests and /api/trends (Wave 1)
+- [x] 03-02-PLAN.md — Sidecar: update /api/requests (model filter + total count + offset cap) + new /api/trends router (VIEW-03, VIEW-04 backend) (Wave 1)
+- [x] 03-03-PLAN.md — Frontend: recharts + shadcn installs, api.ts type extensions, useRequestLog + useTrends hooks (Wave 2)
+- [x] 03-04-PLAN.md — Frontend: RequestLogTable component (VIEW-03), TrendSection component (VIEW-04), App.tsx wiring, human-verify checkpoint (Wave 2)
 **UI hint**: yes
 
 ### Phase 4: Config Drift + Benchmark Runner
@@ -167,6 +167,29 @@
 | SYS-01 container deployment last (Phase 5) | All features must be working before production packaging; avoids building infra around incomplete features |
 | DuckDB over PostgreSQL direct access | Architectural decision from research: LiteLLM DB schema is internal; REST API + Prometheus is the stable contract |
 | FastAPI sidecar (Python) | Consistent with existing Python stack; avoids Node runtime just for the sidecar |
+
+---
+
+## Backlog
+
+### Phase 999.1: Dashboard UX Enhancements (BACKLOG)
+
+**Goal:** Polish the request log and dashboard views with richer data, better UX, and inline help.
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Items captured:
+- Show error messages and relevant metadata in the request log view
+- Differentiate success vs. error requests visually
+- Fix context utilization not populating
+- Add sorting and filtering to tables
+- Fix "last request" timestamp accuracy
+- Show server names of deployed models
+- Show model metadata per model card
+- Add help tooltips explaining metrics (e.g., p95, p50, TTFT, ctx%)
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
 
 ---
 
