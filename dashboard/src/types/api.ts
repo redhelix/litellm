@@ -34,6 +34,8 @@ export interface RequestLogRow {
   context_utilization: number | null
   tool_call_status: 'success' | 'repaired' | 'failed' | null
   error_message: string | null
+  api_key_alias: string | null
+  requester_ip_address: string | null
 }
 
 export interface RequestLogResponse {
@@ -88,3 +90,18 @@ export interface BenchmarkRun {
 export interface BenchmarkHistoryResponse {
   runs: BenchmarkRun[]
 }
+
+export interface ClientRow {
+  client: string
+  requests: number
+  errors: number
+  error_rate: number
+}
+
+export interface ModelInfo {
+  backend_model: string
+  api_base: string | null
+  provider: string
+}
+
+export type ModelHealth = Record<string, 'up' | 'down' | 'unknown'>
