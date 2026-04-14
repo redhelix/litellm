@@ -120,6 +120,7 @@ services:
       - PROMETHEUS_URL=http://192.168.50.117:9090
       - CONFIG_YAML_PATH=/app/config.yaml
       - TOOL_REPAIRS_LOG=/tmp/tool_repairs.jsonl
+      - LITELLM_BENCH_KEY=${LITELLM_BENCH_KEY}
       # SYS-02: master key intentionally absent from this service
     networks:
       - litellm-internal
