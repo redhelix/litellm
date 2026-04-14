@@ -196,6 +196,23 @@ Items captured:
 Plans:
 - [ ] TBD (promote with /gsd-review-backlog when ready)
 
+### Phase 999.2: LLM-Powered Intelligence Layer (BACKLOG)
+
+**Goal:** Use LLMs to autonomously monitor lab health, diagnose anomalies, recommend config/model changes, and surface ideal new model releases from Hugging Face.
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Items captured:
+- LLM-based anomaly detection on metrics (latency spikes, error rate increases, context utilization trends)
+- Automated diagnosis: root cause suggestions when a model degrades
+- Config change recommendations (routing strategy, max_tokens, context window settings)
+- Model swap recommendations based on benchmark results vs. alternatives
+- HuggingFace monitoring: surface new model releases that fit the current deployment profile
+- Natural language Q&A interface over collected metrics
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
 ---
 
 *Roadmap created: 2026-04-13*
