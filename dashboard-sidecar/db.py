@@ -87,6 +87,17 @@ def init_schema(conn: duckdb.DuckDBPyConnection) -> None:
             FOREIGN KEY (run_id) REFERENCES benchmark_runs(run_id)
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS intelligence_cache (
+            id              INTEGER PRIMARY KEY DEFAULT 1,
+            generated_at    TIMESTAMPTZ NOT NULL,
+            health_summary  TEXT,
+            anomalies       TEXT,
+            recommendations TEXT,
+            hf_models       TEXT,
+            model_used      TEXT
+        )
+    """)
 
 
 def query(sql: str, params: tuple | None = None) -> list[tuple]:
