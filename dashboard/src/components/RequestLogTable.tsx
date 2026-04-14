@@ -97,12 +97,12 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
   const isLastPage = page >= totalPages || totalPages === 0
 
   function handleModelChange(value: string | null) {
-    setSelectedModel(value === '__all__' || value === null ? null : value)
+    setSelectedModel(!value || value === '__all__' ? null : value)
     setPage(1)
   }
 
-  function handleStatusChange(value: string) {
-    setStatusFilter(value === '__all__' ? null : value as 'success' | 'repaired' | 'failed')
+  function handleStatusChange(value: string | null) {
+    setStatusFilter(!value || value === '__all__' ? null : value as 'success' | 'repaired' | 'failed')
     setPage(1)
   }
 
@@ -219,6 +219,8 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
             <TableHeader>
               <TableRow className="border-zinc-800">
                 <TableHead className="text-zinc-400">Model</TableHead>
+                <TableHead className="text-zinc-400">Key</TableHead>
+                <TableHead className="text-zinc-400">IP</TableHead>
                 <TableHead className="text-zinc-400">
                   <SortableHeader label="TTFT" column="ttft_ms" />
                 </TableHead>
@@ -252,6 +254,12 @@ export function RequestLogTable({ sidecarUrl = '', modelOptions = [] }: RequestL
                           <TooltipContent>{row.error_message}</TooltipContent>
                         </Tooltip>
                       ) : row.model}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-zinc-400">
+                      {row.api_key_alias ?? '—'}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-zinc-400">
+                      {row.requester_ip_address ?? '—'}
                     </TableCell>
                     <TableCell className="text-xs">{fmtMs(row.ttft_ms)}</TableCell>
                     <TableCell className="text-xs">{fmtMs(row.total_latency_ms)}</TableCell>
