@@ -23,6 +23,12 @@ def in_memory_db(monkeypatch):
     db_module.init_schema(conn)
     # Patch module-level connection so db.query/execute use our in-memory conn
     monkeypatch.setattr(db_module, "_conn", conn)
+    # Reset intelligence in-memory cache so GET endpoint returns empty state
+    try:
+        import intelligence_job
+        monkeypatch.setattr(intelligence_job, "_cache", {})
+    except ImportError:
+        pass
     yield conn
     conn.close()
 

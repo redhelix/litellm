@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -11,6 +12,7 @@ from config_loader import load_config, get_max_ctx, register_sighup
 from repairs import RepairsLogReader
 from poller import poll_once
 from prometheus_scraper import scrape_once
+from intelligence_job import run_intelligence_job
 
 from routers.requests import router as requests_router
 from routers.models import router as models_router
@@ -21,6 +23,7 @@ from routers.config_diff import router as config_diff_router
 from routers.benchmark import router as benchmark_router
 from routers.clients import router as clients_router
 from routers.model_health import router as model_health_router, ping_models_job
+from routers.intelligence import router as intelligence_router
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
@@ -56,6 +59,13 @@ def _scrape_job():
         log.exception("scrape_once failed: %s", e)
 
 
+def _intelligence_job_wrapper():
+    try:
+        run_intelligence_job()
+    except Exception as e:
+        log.exception("run_intelligence_job failed: %s", e)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global scheduler, repairs_reader
@@ -68,8 +78,16 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(_poll_job, "interval", seconds=30, id="poll", max_instances=1)
     scheduler.add_job(_scrape_job, "interval", seconds=60, id="scrape", max_instances=1)
     scheduler.add_job(ping_models_job, "interval", seconds=30, id="ping_models", max_instances=1)
+    scheduler.add_job(
+        _intelligence_job_wrapper,
+        "interval",
+        hours=12,
+        id="intelligence",
+        max_instances=1,
+        next_run_time=datetime.now() + timedelta(seconds=30),
+    )
     scheduler.start()
-    log.info("scheduler started: poll=30s, scrape=60s, ping=30s")
+    log.info("scheduler started: poll=30s, scrape=60s, ping=30s, intel=12h")
     yield
     if scheduler:
         scheduler.shutdown(wait=False)
@@ -99,3 +117,4 @@ app.include_router(config_diff_router)
 app.include_router(benchmark_router)
 app.include_router(clients_router)
 app.include_router(model_health_router)
+app.include_router(intelligence_router)
