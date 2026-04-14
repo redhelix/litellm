@@ -111,7 +111,7 @@ Plans:
   4. The master key and all secrets are sourced from environment variables in `.env` — no secret is hardcoded in any `Dockerfile`, `docker-compose.yaml`, or application config file committed to the repo.
 **Plans**: 2 plans
 Plans:
-- [ ] 05-01-PLAN.md — Secrets audit: replace hardcoded DATABASE_URL/POSTGRES_PASSWORD in docker-compose.yaml, complete .env.template (SYS-01)
+- [x] 05-01-PLAN.md — Secrets audit: replace hardcoded DATABASE_URL/POSTGRES_PASSWORD in docker-compose.yaml, complete .env.template (SYS-01)
 - [ ] 05-02-PLAN.md — Live verification on docker-001: cold-start timing, DuckDB persistence, network isolation, human-verify checkpoint (SYS-01, SYS-03)
 **UI hint**: no
 
