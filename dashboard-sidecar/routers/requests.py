@@ -74,7 +74,8 @@ def list_requests(
         SELECT request_id, startTime, model, model_group,
                prompt_tokens, completion_tokens, total_tokens,
                ttft_ms, total_latency_ms, status, tool_call_status,
-               context_utilization, error_message
+               context_utilization, error_message,
+               api_key_alias, requester_ip_address
         FROM requests
         WHERE {where}
         ORDER BY {order_col} {order_dir} NULLS LAST, startTime DESC
@@ -84,7 +85,8 @@ def list_requests(
     cols = ["request_id", "startTime", "model", "model_group",
             "prompt_tokens", "completion_tokens", "total_tokens",
             "ttft_ms", "total_latency_ms", "status", "tool_call_status",
-            "context_utilization", "error_message"]
+            "context_utilization", "error_message",
+            "api_key_alias", "requester_ip_address"]
     return {
         "rows": [dict(zip(cols, r)) for r in rows],
         "total": total,

@@ -33,12 +33,18 @@ def init_schema(conn: duckdb.DuckDBPyConnection) -> None:
             context_utilization DOUBLE,
             api_key_alias       TEXT,
             team_alias          TEXT,
-            error_message       TEXT
+            error_message       TEXT,
+            requester_ip_address TEXT
         )
     """)
     # Backward-compat migration: add error_message to existing volume-mounted DBs
     try:
         conn.execute("ALTER TABLE requests ADD COLUMN error_message TEXT")
+    except duckdb.Error:
+        pass  # column already exists
+    # Backward-compat migration: add requester_ip_address to existing volume-mounted DBs
+    try:
+        conn.execute("ALTER TABLE requests ADD COLUMN requester_ip_address TEXT")
     except duckdb.Error:
         pass  # column already exists
     conn.execute("CREATE SEQUENCE IF NOT EXISTS latency_snapshots_seq START 1")

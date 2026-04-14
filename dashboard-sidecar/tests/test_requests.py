@@ -174,3 +174,16 @@ def test_invalid_sort_dir_returns_400(client):
 def test_invalid_status_filter_returns_400(client):
     resp = client.get("/api/requests?status_filter=exploded")
     assert resp.status_code == 400
+
+
+# --- D-01 Phase 8: api_key_alias + requester_ip_address in response ---
+
+def test_api_key_alias_and_requester_ip_in_response_keys(seeded_client):
+    """Every row in /api/requests must include api_key_alias and requester_ip_address keys."""
+    resp = seeded_client.get("/api/requests?window=30d&limit=100")
+    assert resp.status_code == 200
+    rows = resp.json()["rows"]
+    assert len(rows) > 0
+    for row in rows:
+        assert "api_key_alias" in row, f"api_key_alias missing from row: {row}"
+        assert "requester_ip_address" in row, f"requester_ip_address missing from row: {row}"

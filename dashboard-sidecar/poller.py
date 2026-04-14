@@ -36,7 +36,8 @@ SELECT_SQL = """
            status,
            api_key,
            metadata,
-           exception
+           metadata::jsonb->'error_information'->>'error_message' AS error_message
+           ,requester_ip_address
     FROM "LiteLLM_SpendLogs"
     WHERE "startTime" > %s
       AND "startTime" > NOW() - INTERVAL '5 minutes'
@@ -48,8 +49,9 @@ UPSERT_SQL = """
         request_id, startTime, model, model_group,
         prompt_tokens, completion_tokens, total_tokens,
         ttft_ms, total_latency_ms, status, tool_call_status,
-        context_utilization, api_key_alias, team_alias, error_message
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        context_utilization, api_key_alias, team_alias, error_message,
+        requester_ip_address
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT (request_id) DO UPDATE SET
         ttft_ms             = EXCLUDED.ttft_ms,
         total_latency_ms    = EXCLUDED.total_latency_ms,
@@ -142,7 +144,7 @@ def poll_once(pg_url: str, repairs_reader: RepairsLogReader, max_ctx: dict[str, 
     count = 0
     for row in rows:
         (request_id, start, end, cstart, model, model_group,
-         pt, ct, tt, status, api_key, metadata, exception) = row
+         pt, ct, tt, status, api_key, metadata, error_message, requester_ip) = row
         ttft_ms = compute_ttft_ms(start, cstart)
         total_ms = compute_total_latency_ms(start, end)
         ctx_util = compute_context_utilization(pt, model, max_ctx)
@@ -152,7 +154,8 @@ def poll_once(pg_url: str, repairs_reader: RepairsLogReader, max_ctx: dict[str, 
             request_id, start, model, model_group,
             pt, ct, tt,
             ttft_ms, total_ms, status, tool_status,
-            ctx_util, api_alias, team_alias, exception,
+            ctx_util, api_alias, team_alias, error_message,
+            requester_ip,
         ))
         count += 1
     return count

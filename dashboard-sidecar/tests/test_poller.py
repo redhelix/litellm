@@ -31,8 +31,8 @@ def test_watermark_persists_across_polls(in_memory_db):
 
 # --- D-01: error_message ingestion tests ---
 
-def _make_pg_row(request_id, exception=None):
-    """Build a fake psycopg2 row matching the SELECT_SQL column order (with exception)."""
+def _make_pg_row(request_id, exception=None, requester_ip=None):
+    """Build a fake psycopg2 row matching the SELECT_SQL column order."""
     now = datetime.now(timezone.utc)
     return (
         request_id,     # request_id
@@ -47,7 +47,8 @@ def _make_pg_row(request_id, exception=None):
         "success",      # status
         "key-123",      # api_key
         None,           # metadata
-        exception,      # exception (NEW)
+        exception,      # error_message
+        requester_ip,   # requester_ip_address
     )
 
 
@@ -106,8 +107,8 @@ def test_error_message_none_when_exception_null(in_memory_db, tmp_repairs_log):
 
 
 def test_select_sql_includes_exception():
-    """SELECT_SQL must include exception column for D-01."""
-    assert "exception" in poller.SELECT_SQL, "SELECT_SQL must select exception column from spend_logs"
+    """SELECT_SQL must include error_message extraction for D-01."""
+    assert "error_message" in poller.SELECT_SQL, "SELECT_SQL must select error_message from spend_logs"
 
 
 def test_error_message_column_in_schema(in_memory_db):
@@ -122,3 +123,32 @@ def test_alter_table_idempotent(in_memory_db):
     import db as db_mod
     # Second call should succeed even though column already exists
     db_mod.init_schema(in_memory_db)  # should not raise
+
+
+def test_requester_ip_address_column_in_schema(in_memory_db):
+    """DuckDB requests table must have requester_ip_address column."""
+    cols = in_memory_db.execute("PRAGMA table_info(requests)").fetchall()
+    col_names = [c[1] for c in cols]
+    assert "requester_ip_address" in col_names, f"requester_ip_address column missing. Columns: {col_names}"
+
+
+def test_requester_ip_stored_in_upsert(in_memory_db, tmp_repairs_log):
+    """When spend_logs row has requester_ip_address, it is passed to the upsert."""
+    import repairs
+
+    reader = repairs.RepairsLogReader(tmp_repairs_log)
+    pg_row = _make_pg_row("req-ip-1", requester_ip="1.2.3.4")
+
+    mock_conn = MagicMock()
+    mock_cur = MagicMock()
+    mock_cur.fetchall.return_value = [pg_row]
+    mock_conn.cursor.return_value = mock_cur
+
+    with patch("psycopg2.connect", return_value=mock_conn), \
+         patch("poller.query", return_value=[(None,)]), \
+         patch("poller.execute") as mock_exec:
+        poller.poll_once("postgresql://fake/db", reader, {"spark-learner": 131072})
+
+    assert mock_exec.called
+    params = mock_exec.call_args[0][1]
+    assert "1.2.3.4" in params, f"requester_ip_address not found in upsert params: {params}"
