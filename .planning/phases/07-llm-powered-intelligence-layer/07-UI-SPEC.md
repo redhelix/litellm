@@ -111,7 +111,7 @@ No new third-party registries. No new shadcn blocks needed.
 
 ## Section Layout: Intelligence Tab
 
-The Intelligence tab is a new `<section>` added to App.tsx in the same scrollable single-page layout. It is NOT gated behind a tab switcher — it follows the existing pattern of named `<section>` elements separated by `<Separator>` (border-zinc-800).
+The Intelligence section is a **dedicated tab** in the App.tsx tab switcher, appearing alongside the existing "Models" and "Request Log" tabs. It is gated behind a tab click — the user must navigate to the Intelligence tab to see it. This matches the user's explicit decision (D-01) and is consistent with the tab bar pattern already established in App.tsx. The tab label is "Intelligence".
 
 ### Section order within Intelligence tab (top to bottom):
 
@@ -249,11 +249,11 @@ Source: `dashboard/components.json` — `"registries": {}` (empty).
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: FLAG (non-blocking — "Ask" CTA single word)
+- [x] Dimension 2 Visuals: FLAG (non-blocking — focal point implicit: Lab Health first/full-width)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: FLAG (non-blocking — 11px/12px close; executor may collapse to 12px)
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED — layout conflict resolved (dedicated tab confirmed by user)
