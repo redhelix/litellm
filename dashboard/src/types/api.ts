@@ -33,6 +33,7 @@ export interface RequestLogRow {
   total_latency_ms: number | null
   context_utilization: number | null
   tool_call_status: 'success' | 'repaired' | 'failed' | null
+  error_message: string | null
 }
 
 export interface RequestLogResponse {

@@ -7,6 +7,9 @@ interface UseRequestLogParams {
   offset?: number
   model?: string | null
   sidecarUrl?: string
+  sortBy?: 'startTime' | 'ttft_ms' | 'total_latency_ms'
+  sortDir?: 'asc' | 'desc'
+  statusFilter?: 'success' | 'repaired' | 'failed' | null
 }
 
 /**
@@ -21,7 +24,7 @@ export function useRequestLog(params: UseRequestLogParams = {}): {
   loading: boolean
   error: string | null
 } {
-  const { window = '30d', limit = 25, offset = 0, model = null, sidecarUrl = '' } = params
+  const { window = '30d', limit = 25, offset = 0, model = null, sidecarUrl = '', sortBy, sortDir, statusFilter } = params
 
   const [data, setData] = useState<RequestLogResponse | null>(null)
   const [loading, setLoading] = useState(true)
@@ -42,6 +45,9 @@ export function useRequestLog(params: UseRequestLogParams = {}): {
       window,
     })
     if (model) searchParams.set('model', model)
+    if (sortBy) searchParams.set('sort_by', sortBy)
+    if (sortDir) searchParams.set('sort_dir', sortDir)
+    if (statusFilter) searchParams.set('status_filter', statusFilter)
 
     fetch(`${sidecarUrl}/api/requests?${searchParams}`, { signal: controller.signal })
       .then(r => {
@@ -65,7 +71,7 @@ export function useRequestLog(params: UseRequestLogParams = {}): {
       mounted = false
       controller.abort()
     }
-  }, [sidecarUrl, model, limit, offset, window])
+  }, [sidecarUrl, model, limit, offset, window, sortBy, sortDir, statusFilter])
 
   return { data, loading, error }
 }
