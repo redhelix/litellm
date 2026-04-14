@@ -12,6 +12,7 @@ import { TrendSection } from '@/components/TrendSection'
 import ConfigDriftView from './components/ConfigDriftView'
 import BenchmarkRunner from './components/BenchmarkRunner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { resolveServer } from '@/utils/modelMeta'
 
 const SIDECAR_URL = (import.meta.env.VITE_SIDECAR_URL as string) ?? 'http://docker-001:4001'
@@ -41,71 +42,91 @@ function App() {
         <RefreshRing countdown={countdown} error={error} isStale={isStale} />
       </header>
 
-      <OverviewPanel models={models} isStale={isStale} sidecarUrl={SIDECAR_URL} />
+      <Tabs defaultValue="models">
+        <TabsList className="mb-8">
+          <TabsTrigger value="models">Models</TabsTrigger>
+          <TabsTrigger value="requests">Request Log</TabsTrigger>
+          <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
+        </TabsList>
 
-      <Separator className="my-8 border-zinc-800" />
+        {/* Tab: Models */}
+        <TabsContent value="models">
+          <OverviewPanel models={models} isStale={isStale} sidecarUrl={SIDECAR_URL} />
 
-      {/* Section 2: Per-model cards */}
-      <section aria-label="Models">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Models</h2>
-          <ToggleGroup
-            value={[modelFilter]}
-            onValueChange={(vals) => {
-              if (vals.length > 0) setModelFilter(vals[0] as ModelFilter)
-            }}
-            aria-label="Filter models by location"
-          >
-            <ToggleGroupItem value="All" aria-label="Show all models">All</ToggleGroupItem>
-            <ToggleGroupItem value="Local" aria-label="Show local models only">Local</ToggleGroupItem>
-            <ToggleGroupItem value="Cloud" aria-label="Show cloud models only">Cloud</ToggleGroupItem>
-          </ToggleGroup>
-        </div>
-        {filteredModels.length === 0 ? (
+          <Separator className="my-8 border-zinc-800" />
+
+          {/* Section 2: Per-model cards */}
+          <section aria-label="Models">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Models</h2>
+              <ToggleGroup
+                value={[modelFilter]}
+                onValueChange={(vals) => {
+                  if (vals.length > 0) setModelFilter(vals[0] as ModelFilter)
+                }}
+                aria-label="Filter models by location"
+              >
+                <ToggleGroupItem value="All" aria-label="Show all models">All</ToggleGroupItem>
+                <ToggleGroupItem value="Local" aria-label="Show local models only">Local</ToggleGroupItem>
+                <ToggleGroupItem value="Cloud" aria-label="Show cloud models only">Cloud</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+            {filteredModels.length === 0 ? (
+              <div className="rounded-lg border border-zinc-800 p-8 text-center">
+                <p className="text-sm font-medium text-zinc-300">No model data</p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  {models.length === 0
+                    ? 'The sidecar returned no model metrics. Check that dashboard-sidecar is running on docker-001:4001.'
+                    : `No ${modelFilter.toLowerCase()} models found.`}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {filteredModels.map((model) => (
+                  <ModelCard
+                    key={model.model}
+                    model={model}
+                    isStale={isStale}
+                    modelInfo={modelInfoMap[model.model]}
+                    healthStatus={health[model.model]}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <Separator className="my-8 border-zinc-800" />
+
+          {/* Section 3: Node health grid */}
+          <NodeGrid nodes={nodes} isStale={isStale} />
+
+          <div className="my-8 border-t border-white/10" />
+          <ConfigDriftView />
+          <div className="my-8 border-t border-white/10" />
+          <BenchmarkRunner />
+        </TabsContent>
+
+        {/* Tab: Request Log */}
+        <TabsContent value="requests">
+          <section id="request-log" aria-labelledby="request-log-heading">
+            <RequestLogTable sidecarUrl={SIDECAR_URL} modelOptions={modelNames} />
+          </section>
+
+          <Separator className="my-8 border-zinc-800" />
+
+          <section aria-labelledby="trends-heading">
+            <TrendSection sidecarUrl={SIDECAR_URL} models={modelNames} />
+          </section>
+        </TabsContent>
+
+        {/* Tab: Intelligence (placeholder — wired in Plan 03) */}
+        <TabsContent value="intelligence">
           <div className="rounded-lg border border-zinc-800 p-8 text-center">
-            <p className="text-sm font-medium text-zinc-300">No model data</p>
-            <p className="text-xs text-zinc-500 mt-1">
-              {models.length === 0
-                ? 'The sidecar returned no model metrics. Check that dashboard-sidecar is running on docker-001:4001.'
-                : `No ${modelFilter.toLowerCase()} models found.`}
-            </p>
+            <p className="text-sm text-zinc-300">Intelligence tab</p>
+            <p className="text-xs text-zinc-500 mt-1">Wired in Plan 03 — backend and Q&amp;A coming online.</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredModels.map((model) => (
-              <ModelCard
-                key={model.model}
-                model={model}
-                isStale={isStale}
-                modelInfo={modelInfoMap[model.model]}
-                healthStatus={health[model.model]}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      <Separator className="my-8 border-zinc-800" />
-
-      {/* Section 3: Node health grid */}
-      <NodeGrid nodes={nodes} isStale={isStale} />
-
-      <Separator className="my-8 border-zinc-800" />
-
-      <section id="request-log" aria-labelledby="request-log-heading">
-        <RequestLogTable sidecarUrl={SIDECAR_URL} modelOptions={modelNames} />
-      </section>
-
-      <Separator className="my-8 border-zinc-800" />
-
-      <section aria-labelledby="trends-heading">
-        <TrendSection sidecarUrl={SIDECAR_URL} models={modelNames} />
-      </section>
-
-      <div className="my-8 border-t border-white/10" />
-      <ConfigDriftView />
-      <div className="my-8 border-t border-white/10" />
-      <BenchmarkRunner />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
