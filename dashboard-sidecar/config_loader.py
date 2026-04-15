@@ -21,6 +21,63 @@ CLOUD_HOSTS = {
 #   google/gemini-2.5-flash: 1048576 — Gemini 2.5 Flash (Google AI docs)
 #   openai/nemotron-cascade-2: 65536 — proxy alias for nemotron-cascade-2 underlying model
 #   openai/spark-learner:    131072  — proxy alias for spark-learner underlying model
+# Extra model_group aliases that appear in spend_logs but have no model_name entry
+# in config.yaml (clients send these strings directly). Maps alias → known api_base.
+EXTRA_MODEL_INFO: dict[str, dict] = {
+    # model_group aliases from spend_logs that have no matching model_name in config.yaml
+    "nemotron-3-super": {
+        "backend_model": "openai/nemotron-3-super",
+        "api_base": "http://100.123.128.107:8000/v1",
+        "provider": "openai",
+    },
+    "openai/nemotron-3-super": {
+        "backend_model": "openai/nemotron-3-super",
+        "api_base": "http://100.123.128.107:8000/v1",
+        "provider": "openai",
+    },
+    "openai/nemotron-cascade-2": {
+        "backend_model": "openai/nemotron-cascade-2",
+        "api_base": "http://192.168.50.73:8000/v1",
+        "provider": "openai",
+    },
+    "openai/spark-learner": {
+        "backend_model": "openai/spark-learner",
+        "api_base": "http://100.115.141.106:8000/v1",
+        "provider": "openai",
+    },
+    "gemma-4-31b": {
+        "backend_model": "openai/gemma-4-31b",
+        "api_base": "http://192.168.50.79:9005/v1",
+        "provider": "openai",
+    },
+    "openai/gemma-4-31b": {
+        "backend_model": "openai/gemma-4-31b",
+        "api_base": "http://192.168.50.79:9005/v1",
+        "provider": "openai",
+    },
+    "ollama/nomic-embed-text": {
+        "backend_model": "ollama/nomic-embed-text",
+        "api_base": "http://192.168.50.73:11434",
+        "provider": "ollama",
+    },
+}
+
+# Models to hide from the dashboard. These are either retired (historical requests
+# exist in DuckDB but they're no longer deployed) or redundant aliases that would
+# create duplicate cards. LiteLLM routing is unaffected — only the dashboard view
+# is filtered.
+HIDDEN_MODELS: frozenset[str] = frozenset({
+    "gemma4-26b",       # alias → nemotron-cascade-2 (duplicate card)
+    "qwq-32b",          # retired — no longer deployed
+    "deepseek-r1",      # retired — no longer deployed
+    "gpt-4o",           # not deployed in this lab
+    "claude-3-5-sonnet",# not deployed in this lab
+    "claude-3-haiku",   # not deployed in this lab
+    "google/gemini-2.5-flash",  # not deployed (external, not part of lab)
+    "gpt-4o-mini",      # not deployed in this lab
+    "llama-3.3-70b",    # retired — no longer deployed
+})
+
 FALLBACK_CTX_MAP: dict[str, int] = {
     "gemma-4-31b":              131072,
     "nemotron-cascade-2":       65536,
@@ -82,6 +139,11 @@ def load_config(path: str = "/app/config.yaml") -> None:
             "api_base": api_base,
             "provider": provider,
         }
+    # Merge extra aliases that appear in spend_logs but lack a model_name entry
+    for alias, info in EXTRA_MODEL_INFO.items():
+        if alias not in info_map:
+            info_map[alias] = info
+
     with _lock:
         global _model_info
         _model_info = info_map
@@ -94,7 +156,7 @@ def get_max_ctx() -> dict[str, int]:
 
 def get_model_info_map() -> dict[str, dict]:
     with _lock:
-        return dict(_model_info)
+        return {k: v for k, v in _model_info.items() if k not in HIDDEN_MODELS}
 
 
 def register_sighup(path: str) -> None:

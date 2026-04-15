@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import db
+from config_loader import get_model_info_map, HIDDEN_MODELS
 
 log = logging.getLogger("intelligence_job")
 
@@ -144,16 +145,58 @@ def search_hf_models(top_n: int = 6) -> list[dict]:
 # assemble_metrics_context
 # ---------------------------------------------------------------------------
 
+def _active_model_filter() -> str:
+    """Return a SQL IN clause fragment for currently deployed models only.
+
+    Excludes HIDDEN_MODELS (retired / alias duplicates) so the LLM only sees
+    metrics for models that are actually running in the lab.
+    """
+    info_map = get_model_info_map()  # already excludes HIDDEN_MODELS
+    active = set(info_map.keys()) - HIDDEN_MODELS
+    if not active:
+        return "1=1"  # fallback: no filter
+    placeholders = ", ".join(f"'{m.replace(chr(39), chr(39)*2)}'" for m in sorted(active))
+    return f"model IN ({placeholders})"
+
+
+def _deployment_context() -> str:
+    """Build a concise deployment inventory for the LLM recommendation prompt.
+
+    For each active model alias, describes the backend node IP and whether it is
+    a single-node or multi-node deployment (determined by whether the same
+    api_base is shared across multiple aliases).
+    """
+    info_map = get_model_info_map()
+    # Group aliases by api_base to detect shared (multi-node capable) backends
+    base_to_aliases: dict[str, list[str]] = {}
+    for alias, info in info_map.items():
+        base = info.get("api_base") or "cloud"
+        base_to_aliases.setdefault(base, []).append(alias)
+
+    lines = ["## Currently Deployed Models"]
+    lines.append("alias | backend_node | node_type | model")
+    for alias, info in sorted(info_map.items()):
+        base = info.get("api_base") or "cloud"
+        node_type = "cloud" if base == "cloud" else (
+            "multi-node" if len(base_to_aliases.get(base, [])) > 2 else "single-node"
+        )
+        backend = info.get("backend_model", "")
+        lines.append(f"{alias} | {base} | {node_type} | {backend}")
+    return "\n".join(lines)
+
+
 def assemble_metrics_context() -> str:
     """Run the three aggregate SQL queries and format results as a text table block.
 
+    Only includes currently deployed models (excludes retired/hidden aliases).
     Truncates to ~3000 chars to stay within LLM prompt budget.
     """
     sections = []
+    model_filter = _active_model_filter()
 
     # --- 24h model aggregates ---
     try:
-        rows = db.query("""
+        rows = db.query(f"""
             SELECT model,
                    COUNT(*) as request_count,
                    AVG(ttft_ms) as avg_ttft_ms,
@@ -164,6 +207,7 @@ def assemble_metrics_context() -> str:
                    SUM(CASE WHEN tool_call_status = 'repaired' THEN 1 ELSE 0 END) as tool_repairs
             FROM requests
             WHERE startTime > NOW() - INTERVAL 24 HOUR
+              AND {model_filter}
             GROUP BY model
             ORDER BY request_count DESC
         """)
@@ -179,12 +223,13 @@ def assemble_metrics_context() -> str:
 
     # --- recent error clusters ---
     try:
-        rows = db.query("""
+        rows = db.query(f"""
             SELECT model, error_message, COUNT(*) as occurrences
             FROM requests
             WHERE startTime > NOW() - INTERVAL 6 HOUR
               AND status = 'failed'
               AND error_message IS NOT NULL
+              AND {model_filter}
             GROUP BY model, error_message
             ORDER BY occurrences DESC
             LIMIT 10
@@ -200,12 +245,13 @@ def assemble_metrics_context() -> str:
 
     # --- 7d latency trend ---
     try:
-        rows = db.query("""
+        rows = db.query(f"""
             SELECT DATE_TRUNC('day', startTime) as day,
                    model,
                    AVG(total_latency_ms) as avg_latency_ms
             FROM requests
             WHERE startTime > NOW() - INTERVAL 7 DAY
+              AND {model_filter}
             GROUP BY day, model
             ORDER BY day DESC, model
         """)
@@ -314,21 +360,34 @@ def run_intelligence_job() -> None:
         log.exception("anomaly call_llm failed: %s", exc)
         anomalies = []
 
-    # Step 4: recommendations
+    # Step 4: recommendations (includes deployment topology for model-swap suggestions)
+    deploy_ctx = _deployment_context()
     try:
         rec_raw = call_llm([
             {
                 "role": "system",
                 "content": (
-                    "You are a lab infrastructure analyst. Based on the LLM inference metrics, "
-                    "provide actionable recommendations. Return a JSON array of objects with keys: "
+                    "You are a lab infrastructure analyst for a private homelab running local GPU models. "
+                    "Based on the LLM inference metrics and current deployment topology, provide actionable "
+                    "recommendations. Return a JSON array of objects with keys: "
                     "title (string), body (string, 2-4 sentences). "
+                    "IMPORTANT — when recommending a model replacement or addition:\n"
+                    "  1. Name the specific model to deploy.\n"
+                    "  2. State which backend node (IP or alias) it should run on.\n"
+                    "  3. State whether it requires single-node or multi-node deployment.\n"
+                    "  4. Explain WHY it is better than the currently deployed model it would replace "
+                    "(e.g., lower latency, higher throughput, better quantization, smaller VRAM footprint).\n"
                     "Return ONLY valid JSON, no other text."
                 ),
             },
             {
                 "role": "user",
-                "content": f"Metrics:\n\n{metrics_ctx}\n\nProvide up to 3 recommendations. Return JSON only.",
+                "content": (
+                    f"Current deployment topology:\n\n{deploy_ctx}\n\n"
+                    f"Metrics:\n\n{metrics_ctx}\n\n"
+                    "Provide up to 3 recommendations. For any model-swap suggestion include node, "
+                    "single/multi-node, and why it beats the current model. Return JSON only."
+                ),
             },
         ], max_tokens=1024)
         try:
