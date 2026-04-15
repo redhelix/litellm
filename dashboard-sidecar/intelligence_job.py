@@ -168,13 +168,22 @@ def _deployment_context() -> str:
     """
     return """## Lab Hardware Topology
 
-| Node        | Hardware              | Deployed Model (primary alias)                          |
-|-------------|-----------------------|---------------------------------------------------------|
-| spark-001   | DGX SPARK CLUSTER     | Qwen3.5-35B-3A-Distilled  (spark-learner, honcho-chat) |
-| spark-002   | DGX SPARK CLUSTER     | Gemma4-31B  (spark-gemma4-31B, gemma-4-31b)             |
-| spark-003   | DGX SPARK CLUSTER     | Nemotron-3-Super-120B  (spark-nemotron-120B)            |
-| hintonator  | RTX 5090, 64 GB VRAM  | nemotron-cascade-2  (primary), nomic-embed-text         |
-| docker-gpu  | RTX 3090, 24 GB VRAM  | nemotron-cascade-2  (secondary, lower-priority)         |
+IMPORTANT — VRAM constraints are hard limits. Only suggest models that can realistically
+run within the target node's VRAM budget. Do not suggest models that exceed these limits.
+
+| Node        | Hardware                        | VRAM       | Current Model                                           |
+|-------------|---------------------------------|------------|---------------------------------------------------------|
+| spark-001   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Qwen3.5-35B-3A-Distilled  (spark-learner, honcho-chat) |
+| spark-002   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Gemma4-31B  (spark-gemma4-31B, gemma-4-31b)             |
+| spark-003   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Nemotron-3-Super-120B  (spark-nemotron-120B)            |
+| hintonator  | RTX 5090 (single GPU)           | 32 GB      | nemotron-cascade-2  (primary), nomic-embed-text         |
+| docker-gpu  | RTX 3090 (single GPU)           | 24 GB      | nemotron-cascade-2  (secondary, lower-priority)         |
+
+VRAM sizing guide (approximate at FP8/NVFP4 quantization):
+- ~7B model: 6–8 GB → fits hintonator or docker-gpu
+- ~30B model: 20–25 GB → fits hintonator (tight), not docker-gpu
+- ~70B model: 35–40 GB → does NOT fit hintonator (32 GB); requires DGX SPARK cluster
+- ~120B+ model: 60+ GB → requires DGX SPARK cluster only
 
 ## Quality / Capability Use-Case Matrix
 
@@ -374,20 +383,26 @@ def run_intelligence_job() -> None:
             {
                 "role": "system",
                 "content": (
-                    "You are a senior ML infrastructure advisor for a private homelab. "
-                    "Your recommendations MUST be driven by output quality and functional capability. "
-                    "Each recommendation MUST include a direct head-to-head comparison between the "
-                    "current model and the suggested alternative — do not make vague claims. "
-                    "Be specific: name both models, describe what each is weak or strong at for the "
-                    "target use case, and explain concretely why the suggested model produces better "
-                    "outputs (e.g. deeper domain knowledge, native tool-call fine-tuning vs generic "
-                    "instruction-following, longer context without quality degradation, stronger "
-                    "multi-step reasoning, better code understanding). "
-                    "Latency is a secondary factor — only cite it if it is a meaningful additional reason.\n\n"
-                    "Structure every body field as:\n"
-                    "  - Current situation: [model X] is handling [use case] but [specific weakness].\n"
-                    "  - Better fit: [model Y] on [node, single/multi-node] because [concrete capability advantage vs X].\n"
-                    "  - Direct comparison: [model Y] vs [model X] — [2–3 specific differentiators].\n\n"
+                    "You are a senior ML infrastructure advisor for a private homelab.\n\n"
+                    "STRICT RULES — violating any of these invalidates the recommendation:\n"
+                    "1. NEVER cite external benchmark numbers, accuracy percentages, or throughput "
+                    "figures that are not present in the live metrics provided. No fabricated stats. "
+                    "Comparisons must be based on architectural facts (context window, parameter count, "
+                    "training focus, fine-tuning type) or observed metrics from the data.\n"
+                    "2. NEVER suggest a model that exceeds the target node's VRAM budget. Check the "
+                    "VRAM sizing guide in the topology. A 70B model CANNOT run on a 32 GB GPU.\n"
+                    "3. Do NOT suggest the same replacement model for multiple different use cases — "
+                    "each recommendation must be distinct and targeted.\n"
+                    "4. Only recommend changes that are grounded in what is observable from the "
+                    "provided metrics (e.g. high latency on a latency-sensitive path, low utilization "
+                    "suggesting a misrouted workload, error spikes on a specific model).\n\n"
+                    "Each recommendation must include a direct head-to-head comparison:\n"
+                    "  - Current situation: [model X] is handling [use case], "
+                    "weakness observed: [from metrics or known architectural limitation].\n"
+                    "  - Better fit: [model Y] on [node] ([single-GPU or DGX cluster]) "
+                    "because [architectural reason — context window, training focus, etc.].\n"
+                    "  - Direct comparison: [model Y] vs [model X]: "
+                    "[2–3 concrete architectural differentiators — no fabricated numbers].\n\n"
                     "Return a JSON array of up to 3 objects with keys: "
                     "title (string), body (string). "
                     "Return ONLY valid JSON, no other text."
