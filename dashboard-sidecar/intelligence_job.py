@@ -160,29 +160,36 @@ def _active_model_filter() -> str:
 
 
 def _deployment_context() -> str:
-    """Build a concise deployment inventory for the LLM recommendation prompt.
+    """Return a fixed description of the lab's hardware topology and quality use-case matrix.
 
-    For each active model alias, describes the backend node IP and whether it is
-    a single-node or multi-node deployment (determined by whether the same
-    api_base is shared across multiple aliases).
+    This is intentionally hardcoded rather than derived from config, because the
+    use-case assignments and hardware names are domain knowledge that the LiteLLM
+    config does not encode.
     """
-    info_map = get_model_info_map()
-    # Group aliases by api_base to detect shared (multi-node capable) backends
-    base_to_aliases: dict[str, list[str]] = {}
-    for alias, info in info_map.items():
-        base = info.get("api_base") or "cloud"
-        base_to_aliases.setdefault(base, []).append(alias)
+    return """## Lab Hardware Topology
 
-    lines = ["## Currently Deployed Models"]
-    lines.append("alias | backend_node | node_type | model")
-    for alias, info in sorted(info_map.items()):
-        base = info.get("api_base") or "cloud"
-        node_type = "cloud" if base == "cloud" else (
-            "multi-node" if len(base_to_aliases.get(base, [])) > 2 else "single-node"
-        )
-        backend = info.get("backend_model", "")
-        lines.append(f"{alias} | {base} | {node_type} | {backend}")
-    return "\n".join(lines)
+| Node        | Hardware              | Deployed Model (primary alias)                          |
+|-------------|-----------------------|---------------------------------------------------------|
+| spark-001   | DGX SPARK CLUSTER     | Qwen3.5-35B-3A-Distilled  (spark-learner, honcho-chat) |
+| spark-002   | DGX SPARK CLUSTER     | Gemma4-31B  (spark-gemma4-31B, gemma-4-31b)             |
+| spark-003   | DGX SPARK CLUSTER     | Nemotron-3-Super-120B  (spark-nemotron-120B)            |
+| hintonator  | RTX 5090, 64 GB VRAM  | nemotron-cascade-2  (primary), nomic-embed-text         |
+| docker-gpu  | RTX 3090, 24 GB VRAM  | nemotron-cascade-2  (secondary, lower-priority)         |
+
+## Quality / Capability Use-Case Matrix
+
+| Use Case                        | Best Model                                    | Why                                                                                      |
+|---------------------------------|-----------------------------------------------|------------------------------------------------------------------------------------------|
+| Agentic orchestration           | nemotron-cascade-2                            | Highest tool-calling accuracy, 3B active params, 110–130 t/s throughput                 |
+| Tool-calling                    | nemotron-cascade-2                            | Native function-calling fine-tune, beats 120B on tool-use benchmarks                    |
+| Coding                          | spark-learner (Qwen3.5-A3B)                   | Strongest code gen/review in 35B class, thinking-mode toggle for complex debugging       |
+| Security analysis               | nemotron-cascade-2 + gemma-4-31b              | Cascade-2 for fast DOM/API automation; Gemma-31B for multimodal threat analysis          |
+| UX / low-latency interactions   | nemotron-cascade-2 or spark-learner           | Both hit 110–150 t/s; Gemma-31B too slow (6.5 t/s) for primary UX paths                |
+| Architecture / system design    | gemma-4-31b → spark-nemotron-120B             | Gemma-31B for full-document context; 120B for cross-domain pattern recognition           |
+| Legal reasoning & analysis      | gemma-4-31b → spark-nemotron-120B             | Gemma-31B for full case files (256K ctx); 120B for precedent chains                     |
+| Research & long-form synthesis  | gemma-4-31b                                   | 256K context fits full papers; dense architecture = coherent long-form output            |
+| Legal drafting / writing        | spark-nemotron-120B                           | Deepest legal knowledge retention, best long-form coherence for contracts and briefs     |
+| Instruction following           | spark-learner (simple) / gemma-4-31b (complex)| Qwen3.5-A3B for routine tasks; Gemma-31B for multi-step long-context instructions       |"""
 
 
 def assemble_metrics_context() -> str:
@@ -360,33 +367,40 @@ def run_intelligence_job() -> None:
         log.exception("anomaly call_llm failed: %s", exc)
         anomalies = []
 
-    # Step 4: recommendations (includes deployment topology for model-swap suggestions)
+    # Step 4: recommendations (quality/capability-driven, not just numbers)
     deploy_ctx = _deployment_context()
     try:
         rec_raw = call_llm([
             {
                 "role": "system",
                 "content": (
-                    "You are a lab infrastructure analyst for a private homelab running local GPU models. "
-                    "Based on the LLM inference metrics and current deployment topology, provide actionable "
-                    "recommendations. Return a JSON array of objects with keys: "
-                    "title (string), body (string, 2-4 sentences). "
-                    "IMPORTANT — when recommending a model replacement or addition:\n"
-                    "  1. Name the specific model to deploy.\n"
-                    "  2. State which backend node (IP or alias) it should run on.\n"
-                    "  3. State whether it requires single-node or multi-node deployment.\n"
-                    "  4. Explain WHY it is better than the currently deployed model it would replace "
-                    "(e.g., lower latency, higher throughput, better quantization, smaller VRAM footprint).\n"
+                    "You are a senior ML infrastructure advisor for a private homelab. "
+                    "Your recommendations MUST be driven by output quality and functional capability — "
+                    "not just latency or throughput numbers. Use the hardware topology and use-case "
+                    "quality matrix below to reason about which model is the right fit for each job. "
+                    "Latency and throughput are secondary concerns; getting the RIGHT model on the RIGHT "
+                    "task is the primary concern.\n\n"
+                    "When recommending a model change or new deployment:\n"
+                    "  1. State which use case or workflow is currently underserved or misrouted.\n"
+                    "  2. Name the specific model that would better serve it and WHY — cite capability "
+                    "differences (reasoning depth, context length, instruction-following quality, "
+                    "domain knowledge, tool-use accuracy), not just speed.\n"
+                    "  3. State which node it should run on (from the topology table) and whether "
+                    "it is single-node or multi-node.\n"
+                    "  4. Only mention latency/throughput if it is a meaningful secondary factor.\n\n"
+                    "Return a JSON array of up to 3 objects with keys: "
+                    "title (string), body (string, 2–4 sentences). "
                     "Return ONLY valid JSON, no other text."
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"Current deployment topology:\n\n{deploy_ctx}\n\n"
-                    f"Metrics:\n\n{metrics_ctx}\n\n"
-                    "Provide up to 3 recommendations. For any model-swap suggestion include node, "
-                    "single/multi-node, and why it beats the current model. Return JSON only."
+                    f"{deploy_ctx}\n\n"
+                    f"## Live Metrics (last 24h)\n\n{metrics_ctx}\n\n"
+                    "Based on the above, identify up to 3 recommendations that would improve "
+                    "output quality or functional coverage. Focus on capability gaps and correct "
+                    "model-task fit. Return JSON only."
                 ),
             },
         ], max_tokens=1024)
