@@ -76,6 +76,9 @@ def call_llm(messages: list[dict], max_tokens: int = 1024) -> str:
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": 0.2,
+        # Disable extended thinking so content tokens are not consumed by reasoning.
+        # Passed as extra_body; vLLM forwards chat_template_kwargs to the model.
+        "chat_template_kwargs": {"enable_thinking": False},
     }).encode("utf-8")
 
     req = urllib.request.Request(
@@ -89,7 +92,7 @@ def call_llm(messages: list[dict], max_tokens: int = 1024) -> str:
     )
     with urllib.request.urlopen(req, timeout=120) as resp:
         body = json.loads(resp.read())
-    return body["choices"][0]["message"]["content"]
+    return body["choices"][0]["message"]["content"] or ""
 
 
 # ---------------------------------------------------------------------------
