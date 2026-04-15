@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { useIntelligence } from '@/hooks/useIntelligence'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -6,6 +7,19 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+
+// Shared Markdown prose styles for the dark zinc theme
+const mdClass =
+  'prose prose-sm prose-invert max-w-none ' +
+  'prose-p:text-zinc-300 prose-p:my-1 ' +
+  'prose-strong:text-zinc-200 prose-strong:font-semibold ' +
+  'prose-ul:text-zinc-300 prose-ul:my-1 prose-li:my-0.5 ' +
+  'prose-ol:text-zinc-300 prose-ol:my-1 ' +
+  'prose-h1:text-zinc-200 prose-h2:text-zinc-200 prose-h3:text-zinc-200 ' +
+  'prose-h1:text-base prose-h2:text-sm prose-h3:text-sm ' +
+  'prose-table:text-xs prose-th:text-zinc-400 prose-td:text-zinc-300 ' +
+  'prose-code:text-zinc-300 prose-code:bg-zinc-800 prose-code:px-1 prose-code:rounded ' +
+  'prose-hr:border-zinc-700'
 
 interface IntelligenceTabProps {
   sidecarUrl: string
@@ -116,7 +130,7 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
           </div>
         ) : (
           <div>
-            <p className="text-sm text-zinc-300">{data.health_summary}</p>
+            <div className={mdClass}><ReactMarkdown>{data.health_summary}</ReactMarkdown></div>
             {data.generated_at && (
               <div className="mt-2">
                 <RelativeTime iso={data.generated_at} />
@@ -200,7 +214,7 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-zinc-400">{rec.body}</p>
+                  <div className={mdClass}><ReactMarkdown>{rec.body}</ReactMarkdown></div>
                 </CardContent>
               </Card>
             ))}
@@ -281,11 +295,11 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
 
         {/* Answer block — hidden until first submission */}
         {(answer !== null || qaError !== null) && (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-300 whitespace-pre-wrap font-mono mt-4">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 mt-4">
             {qaError ? (
-              <span className="text-red-400">{qaError}</span>
+              <span className="text-sm text-red-400">{qaError}</span>
             ) : (
-              answer
+              <div className={mdClass}><ReactMarkdown>{answer ?? ''}</ReactMarkdown></div>
             )}
           </div>
         )}
