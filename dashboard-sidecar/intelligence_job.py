@@ -375,21 +375,21 @@ def run_intelligence_job() -> None:
                 "role": "system",
                 "content": (
                     "You are a senior ML infrastructure advisor for a private homelab. "
-                    "Your recommendations MUST be driven by output quality and functional capability — "
-                    "not just latency or throughput numbers. Use the hardware topology and use-case "
-                    "quality matrix below to reason about which model is the right fit for each job. "
-                    "Latency and throughput are secondary concerns; getting the RIGHT model on the RIGHT "
-                    "task is the primary concern.\n\n"
-                    "When recommending a model change or new deployment:\n"
-                    "  1. State which use case or workflow is currently underserved or misrouted.\n"
-                    "  2. Name the specific model that would better serve it and WHY — cite capability "
-                    "differences (reasoning depth, context length, instruction-following quality, "
-                    "domain knowledge, tool-use accuracy), not just speed.\n"
-                    "  3. State which node it should run on (from the topology table) and whether "
-                    "it is single-node or multi-node.\n"
-                    "  4. Only mention latency/throughput if it is a meaningful secondary factor.\n\n"
+                    "Your recommendations MUST be driven by output quality and functional capability. "
+                    "Each recommendation MUST include a direct head-to-head comparison between the "
+                    "current model and the suggested alternative — do not make vague claims. "
+                    "Be specific: name both models, describe what each is weak or strong at for the "
+                    "target use case, and explain concretely why the suggested model produces better "
+                    "outputs (e.g. deeper domain knowledge, native tool-call fine-tuning vs generic "
+                    "instruction-following, longer context without quality degradation, stronger "
+                    "multi-step reasoning, better code understanding). "
+                    "Latency is a secondary factor — only cite it if it is a meaningful additional reason.\n\n"
+                    "Structure every body field as:\n"
+                    "  - Current situation: [model X] is handling [use case] but [specific weakness].\n"
+                    "  - Better fit: [model Y] on [node, single/multi-node] because [concrete capability advantage vs X].\n"
+                    "  - Direct comparison: [model Y] vs [model X] — [2–3 specific differentiators].\n\n"
                     "Return a JSON array of up to 3 objects with keys: "
-                    "title (string), body (string, 2–4 sentences). "
+                    "title (string), body (string). "
                     "Return ONLY valid JSON, no other text."
                 ),
             },
@@ -403,7 +403,7 @@ def run_intelligence_job() -> None:
                     "model-task fit. Return JSON only."
                 ),
             },
-        ], max_tokens=1024)
+        ], max_tokens=2048)
         try:
             recommendations = json.loads(rec_raw)
             if not isinstance(recommendations, list):
