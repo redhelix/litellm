@@ -17,7 +17,7 @@
 - [ ] **Phase 4: Config Drift + Benchmark Runner** — Config diff surface and on-demand benchmark trigger
 - [ ] **Phase 5: Containerized Deployment** — Production container on docker-001, master key server-side only, local network access
 - [ ] **Phase 6: Dashboard UX Enhancements** — Error display, sorting/filtering, context utilization fix, tooltips, model metadata
-- [ ] **Phase 7: LLM-Powered Intelligence Layer** — Anomaly detection, automated diagnosis, HF model monitoring, NL Q&A
+- [x] **Phase 7: LLM-Powered Intelligence Layer** — Anomaly detection, automated diagnosis, HF model monitoring, NL Q&A (completed 2026-04-15)
 - [ ] **Phase 8: Model & Client Visibility** — Request log client columns (key/IP), top clients panel, collapsible overview sections, ModelCard enrichment (HF link, server name, runtime, URL:port, connectivity ball)
 
 ---
@@ -144,7 +144,7 @@ Plans:
 **Goal:** Use LLMs to autonomously monitor lab health, diagnose anomalies, recommend config/model changes, and surface ideal new model releases from Hugging Face.
 **Depends on:** Phase 6 (UX foundation must be stable)
 **Requirements:** INT-01, INT-02, INT-03, INT-04, INT-05, INT-06 (from 07-CONTEXT.md decisions D-01..D-05)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 - [x] 07-01-PLAN.md — Wave 0 foundation: huggingface_hub dep, intelligence_cache DuckDB table, shadcn Tabs install, App.tsx three-tab restructure, RED pytest stubs (INT-01..INT-06)
 - [x] 07-02-PLAN.md — Wave 1 backend: intelligence_job.py (LLM call + HF search + metrics context + 12h scheduled job), routers/intelligence.py (GET + POST query), main.py wiring; turns 6 RED tests GREEN
 - [x] 07-03-PLAN.md — Wave 2 frontend: useIntelligence hook, IntelligenceTab (5 sections per UI-SPEC), App.tsx wiring, human-verify on docker-001

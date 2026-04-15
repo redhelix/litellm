@@ -119,11 +119,29 @@ Pre-existing `modelMeta.test.ts` failures (2 tests on `isHfPath` for openrouter 
 
 None - no external service configuration required.
 
-## Next Phase Readiness
+## Checkpoint Verification (Task 2)
 
-- Task 1 complete; all automated verification green
-- Task 2 (human-verify checkpoint) awaiting user to rebuild on docker-001 and verify all 5 sections render in browser
-- Upon checkpoint approval, Phase 07 is complete: D-01 through D-05 all realised
+Human-verified on docker-001 — all 5 sections render correctly:
+- health_summary: 493 chars of LLM prose
+- anomalies: 5 cards with severity badges
+- recommendations: 3 cards with "Advisory only" badge
+- hf_models: 6 cards with blue "View on HuggingFace" links
+- Q&A: endpoint returns detailed answers
+
+**Additional fix applied during deploy:** `chat_template_kwargs: {enable_thinking: false}` added to sidecar config to suppress reasoning tokens (gemma4-26b thinking mode was consuming the content budget, resulting in null `content` in LLM responses). Fix committed as `14c3712` on docker-001.
+
+**INTELLIGENCE_MODEL:** `gemma4-26b` (set as env var in docker-compose.yaml)
+
+**Human approval:** Approved 2026-04-14
+
+## Phase 07 Completion
+
+Phase 07 is complete. All locked decisions realised:
+- D-01: Dedicated Intelligence tab with 5 sections in locked order
+- D-02: Local LLM (gemma4-26b via LiteLLM proxy)
+- D-03: 12-hour APScheduler job (fires 30s after boot for first run)
+- D-04: HuggingFace model filter aligned to lab profile
+- D-05: Single-shot Q&A via /api/intelligence/query
 
 ---
 *Phase: 07-llm-powered-intelligence-layer*
