@@ -2,11 +2,10 @@ from litellm.integrations.custom_logger import CustomLogger
 
 
 class MergeSystemMessagesCallback(CustomLogger):
-    """Merge consecutive/multiple system messages into one.
+    """Merge/reorder system messages so they are always at position 0.
 
     Some vLLM backends (e.g. Qwen3 with --reasoning-parser) reject requests
-    that contain more than one system message. OpenCode injects a second system
-    message for skill/context injection, triggering this error.
+    that contain a system message not at index 0.
     """
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
@@ -37,3 +36,6 @@ class MergeSystemMessagesCallback(CustomLogger):
         merged = {"role": "system", "content": "\n\n".join(system_parts)}
         data["messages"] = [merged] + other_messages
         return data
+
+
+proxy_handler_instance = MergeSystemMessagesCallback()
