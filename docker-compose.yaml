@@ -48,6 +48,7 @@ services:
       - ./strip_think.py:/app/strip_think.py
       - ./weave_callback.py:/app/weave_callback.py
       - ./fix_json_tool_calls.py:/app/fix_json_tool_calls.py
+      - ./merge_system_messages.py:/app/merge_system_messages.py
       - ./firecrawl_search_transform.py:/usr/lib/python3.13/site-packages/litellm/llms/firecrawl/search/transformation.py
       - /tmp/tool_repairs.jsonl:/tmp/tool_repairs.jsonl
     environment:
