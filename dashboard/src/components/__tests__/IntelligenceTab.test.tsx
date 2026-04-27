@@ -47,7 +47,7 @@ afterEach(() => {
 
 describe('IntelligenceTab', () => {
   it('Test 1: renders all 4 empty-state headings when data has no content', () => {
-    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null })
+    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null, refreshing: false, elapsedSeconds: 0, refresh: vi.fn() })
 
     render(<IntelligenceTab sidecarUrl="http://localhost:4001" />)
 
@@ -58,7 +58,7 @@ describe('IntelligenceTab', () => {
   })
 
   it('Test 2: populated data — severity badge, advisory badge, HF link attributes', () => {
-    mockUseIntelligence.mockReturnValue({ data: populatedData, loading: false, error: null })
+    mockUseIntelligence.mockReturnValue({ data: populatedData, loading: false, error: null, refreshing: false, elapsedSeconds: 0, refresh: vi.fn() })
 
     render(<IntelligenceTab sidecarUrl="http://localhost:4001" />)
 
@@ -77,7 +77,7 @@ describe('IntelligenceTab', () => {
   })
 
   it('Test 3: Q&A — submitting a question shows answer in whitespace-pre-wrap block', async () => {
-    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null })
+    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null, refreshing: false, elapsedSeconds: 0, refresh: vi.fn() })
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
@@ -107,7 +107,7 @@ describe('IntelligenceTab', () => {
   })
 
   it('Test 4: Q&A error — shows correct error copy in red', async () => {
-    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null })
+    mockUseIntelligence.mockReturnValue({ data: emptyData, loading: false, error: null, refreshing: false, elapsedSeconds: 0, refresh: vi.fn() })
 
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
 

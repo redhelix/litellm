@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { useIntelligence } from '@/hooks/useIntelligence'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { RefreshCw } from 'lucide-react'
 
 // Shared Markdown prose styles for the dark zinc theme
 const mdClass =
@@ -66,7 +68,7 @@ const advisoryClass = 'bg-amber-500/20 text-amber-400 border border-amber-500/30
 // IntelligenceTab
 // ---------------------------------------------------------------------------
 export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
-  const { data, loading, error } = useIntelligence(sidecarUrl)
+  const { data, loading, error, refreshing, elapsedSeconds, refresh } = useIntelligence(sidecarUrl)
 
   // Q&A state
   const [question, setQuestion] = useState('')
@@ -109,8 +111,92 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
     )
   }
 
+  // Recommendations with all summary fields populated
+  const summaryRecs = data?.recommendations?.filter(
+    r => r.use_case && r.current_model && r.suggested_model
+  ) ?? []
+
   return (
     <div>
+      {/* ------------------------------------------------------------------ */}
+      {/* Refresh bar                                                          */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex-1 mr-4">
+          {refreshing && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs text-zinc-400">
+                <RefreshCw className="size-3 animate-spin" />
+                <span>Running analysis… {elapsedSeconds}s</span>
+              </div>
+              <div className="h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-zinc-400 rounded-full animate-[progress_2s_ease-in-out_infinite]"
+                  style={{ width: '40%', animation: 'shimmer 1.5s ease-in-out infinite' }} />
+              </div>
+            </div>
+          )}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={refresh}
+          disabled={refreshing || loading}
+          className="shrink-0 gap-1.5"
+        >
+          <RefreshCw className={`size-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Analyzing…' : 'Refresh'}
+        </Button>
+      </div>
+
+      {/* Indeterminate progress bar — full width, only visible while refreshing */}
+      {refreshing && (
+        <div className="h-0.5 w-full bg-zinc-800 mb-6 rounded-full overflow-hidden">
+          <div className="h-full w-1/3 bg-zinc-400 rounded-full"
+            style={{ animation: 'slide 1.4s ease-in-out infinite' }} />
+        </div>
+      )}
+
+      <style>{`
+        @keyframes slide {
+          0%   { transform: translateX(-100%) scaleX(1); }
+          50%  { transform: translateX(150%) scaleX(1.5); }
+          100% { transform: translateX(400%) scaleX(1); }
+        }
+      `}</style>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 0. Recommendations Summary Table                                     */}
+      {/* ------------------------------------------------------------------ */}
+      {summaryRecs.length > 0 && (
+        <section aria-labelledby="summary-table-heading" className="mb-8">
+          <h2 id="summary-table-heading" className="text-lg font-semibold mb-4">
+            Recommendations Summary
+          </h2>
+          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-zinc-800 bg-zinc-900">
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Use Case</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Current Model</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Suggested Model</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wide">Target Node</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summaryRecs.map((r, i) => (
+                  <tr key={i} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-900/50 transition-colors">
+                    <td className="px-4 py-3 text-zinc-300 font-medium">{r.use_case}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-400">{r.current_model}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-zinc-200">{r.suggested_model}</td>
+                    <td className="px-4 py-3 text-xs text-zinc-500">{r.node ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {/* ------------------------------------------------------------------ */}
       {/* 1. Lab Health                                                        */}
       {/* ------------------------------------------------------------------ */}
@@ -130,7 +216,7 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
           </div>
         ) : (
           <div>
-            <div className={mdClass}><ReactMarkdown>{data.health_summary}</ReactMarkdown></div>
+            <div className={mdClass}><ReactMarkdown remarkPlugins={[remarkGfm]}>{data.health_summary}</ReactMarkdown></div>
             {data.generated_at && (
               <div className="mt-2">
                 <RelativeTime iso={data.generated_at} />
@@ -214,7 +300,7 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className={mdClass}><ReactMarkdown>{rec.body}</ReactMarkdown></div>
+                  <div className={mdClass}><ReactMarkdown remarkPlugins={[remarkGfm]}>{rec.body}</ReactMarkdown></div>
                 </CardContent>
               </Card>
             ))}
@@ -228,9 +314,12 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
       {/* 4. New Model Suggestions                                             */}
       {/* ------------------------------------------------------------------ */}
       <section aria-labelledby="hf-heading">
-        <h2 id="hf-heading" className="text-lg font-semibold mb-4">
+        <h2 id="hf-heading" className="text-lg font-semibold mb-1">
           New Model Suggestions
         </h2>
+        {data?.hf_search_rationale && (
+          <p className="text-xs text-zinc-500 mb-4">{data.hf_search_rationale}</p>
+        )}
 
         {!data || data.hf_models.length === 0 ? (
           <div>
@@ -299,7 +388,7 @@ export function IntelligenceTab({ sidecarUrl }: IntelligenceTabProps) {
             {qaError ? (
               <span className="text-sm text-red-400">{qaError}</span>
             ) : (
-              <div className={mdClass}><ReactMarkdown>{answer ?? ''}</ReactMarkdown></div>
+              <div className={mdClass}><ReactMarkdown remarkPlugins={[remarkGfm]}>{answer ?? ''}</ReactMarkdown></div>
             )}
           </div>
         )}

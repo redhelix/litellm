@@ -43,10 +43,11 @@ function App() {
         <RefreshRing countdown={countdown} error={error} isStale={isStale} />
       </header>
 
-      <Tabs defaultValue="models">
-        <TabsList className="mb-8">
+      <Tabs defaultValue="models" className="flex-col">
+        <TabsList className="mb-8 w-fit">
           <TabsTrigger value="models">Models</TabsTrigger>
           <TabsTrigger value="requests">Request Log</TabsTrigger>
+          <TabsTrigger value="benchmark">Benchmark</TabsTrigger>
           <TabsTrigger value="intelligence">Intelligence</TabsTrigger>
         </TabsList>
 
@@ -103,8 +104,6 @@ function App() {
 
           <div className="my-8 border-t border-white/10" />
           <ConfigDriftView />
-          <div className="my-8 border-t border-white/10" />
-          <BenchmarkRunner />
         </TabsContent>
 
         {/* Tab: Request Log */}
@@ -118,6 +117,11 @@ function App() {
           <section aria-labelledby="trends-heading">
             <TrendSection sidecarUrl={SIDECAR_URL} models={modelNames} />
           </section>
+        </TabsContent>
+
+        {/* Tab: Benchmark */}
+        <TabsContent value="benchmark">
+          <BenchmarkRunner />
         </TabsContent>
 
         {/* Tab: Intelligence */}

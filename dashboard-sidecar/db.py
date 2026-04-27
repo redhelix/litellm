@@ -87,6 +87,26 @@ def init_schema(conn: duckdb.DuckDBPyConnection) -> None:
             FOREIGN KEY (run_id) REFERENCES benchmark_runs(run_id)
         )
     """)
+    # Backward-compat migration: add tier column to benchmark_runs
+    try:
+        conn.execute("ALTER TABLE benchmark_runs ADD COLUMN tier VARCHAR DEFAULT 'short'")
+    except duckdb.Error:
+        pass  # column already exists
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS benchmark_task_results (
+            id                VARCHAR PRIMARY KEY,
+            run_id            VARCHAR NOT NULL,
+            model             VARCHAR NOT NULL,
+            task_name         VARCHAR NOT NULL,
+            score             DOUBLE,
+            skipped           BOOLEAN DEFAULT false,
+            judge_reasoning   TEXT,
+            response_preview  TEXT,
+            FOREIGN KEY (run_id) REFERENCES benchmark_runs(run_id)
+        )
+    """)
+
     conn.execute("""
         CREATE TABLE IF NOT EXISTS intelligence_cache (
             id              INTEGER PRIMARY KEY DEFAULT 1,

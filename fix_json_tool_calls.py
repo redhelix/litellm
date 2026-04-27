@@ -70,6 +70,43 @@ class FixJsonToolCallsCallback(CustomLogger):
             json.loads(fixed)
             return fixed
         except json.JSONDecodeError:
+            pass
+
+        # Fix 3: Invalid escape sequences inside strings (e.g. \. \, \= from truncation)
+        # Re-scan and escape any backslash not followed by a valid JSON escape char.
+        valid_escapes = set('"' + '\\' + '/bfnrtu')
+        result = []
+        in_string = False
+        i = 0
+        while i < len(fixed):
+            ch = fixed[i]
+            if in_string:
+                if ch == '\\':
+                    next_ch = fixed[i + 1] if i + 1 < len(fixed) else ''
+                    if next_ch in valid_escapes:
+                        # Valid escape — consume both chars
+                        result.append(ch)
+                        result.append(next_ch)
+                        i += 2
+                        continue
+                    else:
+                        # Invalid escape — double the backslash
+                        result.append('\\\\')
+                        i += 1
+                        continue
+                elif ch == '"':
+                    in_string = False
+            else:
+                if ch == '"':
+                    in_string = True
+            result.append(ch)
+            i += 1
+
+        fixed = ''.join(result)
+        try:
+            json.loads(fixed)
+            return fixed
+        except json.JSONDecodeError:
             return s
 
     def _fix_messages(self, messages):

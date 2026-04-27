@@ -84,11 +84,34 @@ export interface BenchmarkRun {
   run_id: string
   started_at: string
   completed_at: string | null
+  tier: 'short' | 'full'
   results: BenchmarkResult[]
 }
 
 export interface BenchmarkHistoryResponse {
   runs: BenchmarkRun[]
+}
+
+export interface BenchmarkTaskResult {
+  score: number | null
+  skipped: boolean
+  reasoning: string | null
+  response_preview: string | null
+}
+
+/** Map of model → task_name → result */
+export type BenchmarkTaskResultsMap = Record<string, Record<string, BenchmarkTaskResult>>
+
+export interface BenchmarkTaskResultsResponse {
+  run_id: string
+  results: BenchmarkTaskResultsMap
+}
+
+export interface BenchmarkStatus {
+  running: boolean
+  tier: string | null
+  run_id: string | null
+  started_at: string | null
 }
 
 export interface ClientRow {

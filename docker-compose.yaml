@@ -50,7 +50,7 @@ services:
       - ./fix_json_tool_calls.py:/app/fix_json_tool_calls.py
       - ./merge_system_messages.py:/app/merge_system_messages.py
       - ./firecrawl_search_transform.py:/usr/lib/python3.13/site-packages/litellm/llms/firecrawl/search/transformation.py
-      - /tmp/tool_repairs.jsonl:/tmp/tool_repairs.jsonl
+      - /opt/litellm/tool_repairs.jsonl:/opt/litellm/tool_repairs.jsonl
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - PERPLEXITYAI_API_KEY=${PERPLEXITYAI_API_KEY}
@@ -66,7 +66,7 @@ services:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
       - WANDB_API_KEY=${WANDB_API_KEY}
       - WANDB_PROJECT=${WANDB_PROJECT:-litellm-proxy}
-      - TOOL_REPAIRS_LOG=/tmp/tool_repairs.jsonl
+      - TOOL_REPAIRS_LOG=/opt/litellm/tool_repairs.jsonl
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
@@ -87,7 +87,7 @@ services:
       - "autoheal=true"
     entrypoint: ["sh", "-c"]
     command:
-      - "touch /tmp/tool_repairs.jsonl 2>/dev/null || true; exec litellm --config /app/config.yaml --port 4000 --num_workers 1"
+      - "touch /opt/litellm/tool_repairs.jsonl 2>/dev/null || true; exec litellm --config /app/config.yaml --port 4000 --num_workers 1"
 
   autoheal:
     image: willfarrell/autoheal
@@ -115,12 +115,12 @@ services:
     volumes:
       - ./config.yaml:/app/config.yaml:ro
       - dashboard-duckdb:/data
-      - /tmp/tool_repairs.jsonl:/tmp/tool_repairs.jsonl:ro
+      - /opt/litellm/tool_repairs.jsonl:/opt/litellm/tool_repairs.jsonl:ro
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-litellm}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-litellm}?connect_timeout=10
       - PROMETHEUS_URL=http://192.168.50.117:9090
       - CONFIG_YAML_PATH=/app/config.yaml
-      - TOOL_REPAIRS_LOG=/tmp/tool_repairs.jsonl
+      - TOOL_REPAIRS_LOG=/opt/litellm/tool_repairs.jsonl
       - LITELLM_BENCH_KEY=${LITELLM_BENCH_KEY}
       # SYS-02: master key intentionally absent from this service
     networks:

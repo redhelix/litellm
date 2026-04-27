@@ -159,13 +159,13 @@ export function OverviewPanel({ models, isStale, sidecarUrl = '' }: OverviewPane
         ) : !clients || clients.length === 0 ? (
           <p className="text-xs text-zinc-500">No client data</p>
         ) : (
-          <div className="space-y-1">
+          <div className="inline-flex flex-col gap-1 min-w-0">
             {clients.map(c => (
-              <div key={c.client} className="flex items-center justify-between text-xs">
-                <span className="font-mono text-zinc-300 truncate max-w-[60%]">{c.client}</span>
-                <span className="text-zinc-500">{c.requests} req</span>
+              <div key={c.client} className="flex items-center gap-3 text-xs">
+                <span className="font-mono text-zinc-300 truncate max-w-[240px]">{c.client}</span>
+                <span className="text-zinc-500 shrink-0">{c.requests}r</span>
                 {c.error_rate > 0 && (
-                  <span className="text-red-400">{Math.round(c.error_rate * 100)}% err</span>
+                  <span className="text-red-400 shrink-0">{Math.round(c.error_rate * 100)}%</span>
                 )}
               </div>
             ))}

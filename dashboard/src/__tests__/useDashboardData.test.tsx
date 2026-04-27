@@ -31,16 +31,13 @@ function makeFetch(models = mockModels, nodes = mockNodes) {
     if (url.includes('/api/nodes')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(nodes) })
     }
+    if (url.includes('/api/model-info')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve([]) })
+    }
     return Promise.reject(new Error('Unknown URL'))
   })
 }
 
-// Helper: flush all pending microtasks (promises)
-async function flushPromises() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 0))
-  })
-}
 
 describe('useDashboardData', () => {
   beforeEach(() => {
@@ -63,9 +60,10 @@ describe('useDashboardData', () => {
       await vi.advanceTimersByTimeAsync(0)
     })
 
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(fetchMock).toHaveBeenCalledTimes(3)
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/models'), expect.anything())
     expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/nodes'), expect.anything())
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/model-info'), expect.anything())
     expect(result.current.models).toEqual(mockModels)
     expect(result.current.nodes).toEqual(mockNodes)
     expect(result.current.lastSuccess).toBeInstanceOf(Date)
@@ -107,13 +105,13 @@ describe('useDashboardData', () => {
       await vi.advanceTimersByTimeAsync(0)
     })
 
-    expect(fetchMock.mock.calls.length).toBe(2)
+    expect(fetchMock.mock.calls.length).toBe(3)
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(30_000)
     })
 
-    expect(fetchMock.mock.calls.length).toBe(4) // 2 more after 30s
+    expect(fetchMock.mock.calls.length).toBe(6) // 3 more after 30s
   })
 
   it('H4: countdown decrements from 30 to 29 with 1s ticks and resets to 30 after successful fetch', async () => {

@@ -39,8 +39,31 @@ def get_intelligence():
             "anomalies": [],
             "recommendations": [],
             "hf_models": [],
+            "hf_search_rationale": "",
         }
     return cache
+
+
+@router.get("/intelligence/status")
+def get_intelligence_status():
+    """Return whether the intelligence job is currently running."""
+    with intelligence_job._job_state_lock:
+        running = intelligence_job._job_running
+        started_at = intelligence_job._job_started_at
+    return {
+        "running": running,
+        "started_at": started_at.isoformat() if started_at else None,
+    }
+
+
+@router.post("/intelligence/refresh")
+def refresh_intelligence():
+    """Trigger an on-demand intelligence job run. Returns 409 if already running."""
+    started = intelligence_job.run_intelligence_job_async()
+    if not started:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=409, detail="Intelligence job already running")
+    return {"status": "started"}
 
 
 @router.post("/intelligence/query")

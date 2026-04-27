@@ -90,10 +90,29 @@ metrics:
 - **Fix:** Test asserts `countdown >= 29 && countdown <= 30` to accept either ordering; the behavioral contract (reset happens after success) is still verified by H3 + H4 together
 - **Files modified:** `dashboard/src/__tests__/useDashboardData.test.tsx`
 
-## Known Stubs
+## Addendum: Local/Cloud Toggle (added post-execution)
 
-- `<section aria-label="Models">Model cards coming in Plan 03</section>` — intentional placeholder; Plan 03 replaces this with ModelCards grid
-- `<section aria-label="Nodes">Node grid coming in Plan 03</section>` — intentional placeholder; Plan 03 replaces this with NodeGrid
+**Requirement:** Segmented All | Local | Cloud filter above the ModelCard grid.
+
+### What Was Added
+
+- **`useDashboardData`** now fetches `/api/model-info` in every `Promise.all` batch (3 fetches per cycle instead of 2). Exposes `modelInfoMap: Record<string, ModelInfo>` keyed by `backend_model`.
+- **`App.tsx`** gains `modelFilter` state (`'All' | 'Local' | 'Cloud'`, default `'All'`). `filteredModels` is a `useMemo` that filters by `resolveServer(info?.api_base ?? null)` from `modelMeta.ts`: `'cloud'` → Cloud, anything else → Local.
+- **Toggle UI** renders as a shadcn `ToggleGroup` / `ToggleGroupItem` (already installed, Base UI) inline with the "Models" heading. Selection is single-value; the callback guards `vals.length > 0` to prevent clearing the selection.
+- **Scope:** Filter applies to the ModelCard grid only. OverviewPanel, NodeGrid, RequestLogTable, TrendSection are unaffected.
+- **Empty state:** When filter produces zero models but `models.length > 0`, the empty state reads "No local/cloud models found." instead of the sidecar-down message.
+
+### Test Updates
+
+`useDashboardData.test.tsx` updated: `makeFetch` now handles `/api/model-info` URL returning `[]`; H1 call count updated 2→3, H3 call counts updated 2/4→3/6. All 5 hook tests pass.
+
+### Files Modified
+
+- `dashboard/src/hooks/useDashboardData.ts` — added `/api/model-info` fetch + `modelInfoMap` state/return
+- `dashboard/src/App.tsx` — added `ToggleGroup`, `resolveServer` import, `modelFilter` state, `filteredModels` memo
+- `dashboard/src/__tests__/useDashboardData.test.tsx` — updated call count assertions + `/api/model-info` mock handler
+
+## Known Stubs
 
 These stubs do not prevent the plan's goal (Overview section with live polling) from being achieved.
 

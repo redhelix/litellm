@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { ToolCallBar } from '@/components/ToolCallBar'
 import { formatMs, formatTokensPerSec, formatContextPct } from '@/lib/format'
 import type { ModelAggregate, ModelInfo } from '@/types/api'
-import { extractSize, isHfPath, hfUrl, resolveServer, resolveRuntime, resolveUrlPort } from '@/utils/modelMeta'
+import { extractSize, extractQuant, isHfPath, hfUrl, resolveServer, resolveRuntime, resolveUrlPort } from '@/utils/modelMeta'
 
 interface ModelCardProps {
   model: ModelAggregate
@@ -63,7 +63,8 @@ export function ModelCard({ model, isStale, modelInfo, healthStatus }: ModelCard
   const apiBase = modelInfo?.api_base ?? null
   const provider = modelInfo?.provider ?? ''
 
-  const size = backendModel ? extractSize(backendModel) : '?'
+  const size = backendModel ? extractSize(backendModel) : null
+  const quant = backendModel ? extractQuant(backendModel) : null
   const hasHfLink = backendModel ? isHfPath(backendModel) : false
   const hfLink = hasHfLink && backendModel ? hfUrl(backendModel) : null
   const serverName = resolveServer(apiBase)
@@ -112,8 +113,18 @@ export function ModelCard({ model, isStale, modelInfo, healthStatus }: ModelCard
                 <span className="text-[11px] font-mono text-zinc-400">{urlPort}</span>
               </>
             )}
-            <span className="text-[11px] text-zinc-500">·</span>
-            <span className="text-[11px] text-zinc-400">{size}</span>
+            {size && (
+              <>
+                <span className="text-[11px] text-zinc-500">·</span>
+                <span className="text-[11px] text-zinc-400">{size}</span>
+              </>
+            )}
+            {quant && (
+              <>
+                <span className="text-[11px] text-zinc-500">·</span>
+                <span className="text-[11px] text-zinc-400">{quant}</span>
+              </>
+            )}
           </div>
         )}
       </CardHeader>

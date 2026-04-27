@@ -32,13 +32,18 @@ log = logging.getLogger("intelligence_job")
 # ---------------------------------------------------------------------------
 LITELLM_URL = os.environ.get("LITELLM_URL", "http://litellm-proxy:4000")
 LITELLM_BENCH_KEY = os.environ.get("LITELLM_BENCH_KEY", "")
-INTELLIGENCE_MODEL = os.environ.get("INTELLIGENCE_MODEL", "qwq-32b")
+INTELLIGENCE_MODEL = os.environ.get("INTELLIGENCE_MODEL", "nemotron-cascade-2")
 
 # ---------------------------------------------------------------------------
 # In-memory cache (mirrors model_health.py pattern)
 # ---------------------------------------------------------------------------
 _cache: dict = {}
 _cache_lock = threading.Lock()
+
+# Job running state — used by /api/intelligence/status and /api/intelligence/refresh
+_job_running: bool = False
+_job_started_at: datetime | None = None
+_job_state_lock = threading.Lock()
 
 # ---------------------------------------------------------------------------
 # Startup: hydrate in-memory cache from DuckDB (survives container restart)
@@ -58,6 +63,7 @@ try:
                 "anomalies": json.loads(_r[3]) if _r[3] else [],
                 "recommendations": json.loads(_r[4]) if _r[4] else [],
                 "hf_models": json.loads(_r[5]) if _r[5] else [],
+                "hf_search_rationale": "",
             }
 except Exception:
     pass  # first boot — intelligence_cache may not exist yet
@@ -100,21 +106,59 @@ def call_llm(messages: list[dict], max_tokens: int = 1024) -> str:
 # search_hf_models
 # ---------------------------------------------------------------------------
 
-def search_hf_models(top_n: int = 6) -> list[dict]:
+def _extract_hf_hints(recommendations: list[dict]) -> list[str]:
+    """Derive 1-3 HuggingFace search keywords from recommendation titles via LLM.
+
+    Returns [] on any failure so callers can fall back to default search.
+    """
+    if not recommendations:
+        return []
+    titles = "; ".join(r.get("title", "") for r in recommendations[:3])
+    try:
+        raw = call_llm([
+            {
+                "role": "system",
+                "content": (
+                    "You extract HuggingFace model search keywords. "
+                    "Given a list of recommendation titles, output ONLY a JSON array of 1-3 "
+                    "strings (model family names or capabilities), e.g. [\"Qwen3\", \"instruct\"]. "
+                    "No explanation, just the array."
+                ),
+            },
+            {"role": "user", "content": f"Recommendations: {titles}"},
+        ], max_tokens=60)
+        hints = json.loads(raw)
+        if isinstance(hints, list) and hints:
+            return [str(h).strip() for h in hints[:3] if str(h).strip()]
+    except Exception as exc:
+        log.debug("_extract_hf_hints failed (using defaults): %s", exc)
+    return []
+
+
+def search_hf_models(hints: list[str] | None = None, top_n: int = 6) -> list[dict]:
     """Query HuggingFace Hub for recent NVFP4/FP8 instruct models in the 70B-120B range.
+
+    If *hints* is provided (keywords derived from recommendations), uses them as a
+    text-search filter so results are relevant to what the intelligence job suggested.
 
     Returns list of dicts with keys: id, tags, likes, downloads, hf_url, last_modified.
     Returns [] (never raises) if HfApi raises any exception.
     """
+    if hints is None:
+        hints = []
     try:
         from huggingface_hub import HfApi
         api = HfApi()
-        candidates = list(api.list_models(
+        search_text = " ".join(hints) if hints else None
+        list_kwargs: dict = dict(
             filter=["text-generation", "nvidia"],
             sort="lastModified",
             limit=50,
             full=True,
-        ))
+        )
+        if search_text:
+            list_kwargs["search"] = search_text
+        candidates = list(api.list_models(**list_kwargs))
         results = []
         for m in candidates:
             raw_id = getattr(m, "modelId", None) or getattr(m, "id", "")
@@ -173,7 +217,7 @@ run within the target node's VRAM budget. Do not suggest models that exceed thes
 
 | Node        | Hardware                        | VRAM       | Current Model                                           |
 |-------------|---------------------------------|------------|---------------------------------------------------------|
-| spark-001   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Qwen3.5-35B-3A-Distilled  (spark-learner, honcho-chat) |
+| spark-001   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Qwen3.6-35B-A3B-NVFP4  (spark-learner, honcho-chat)    |
 | spark-002   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Gemma4-31B  (spark-gemma4-31B, gemma-4-31b)             |
 | spark-003   | DGX SPARK CLUSTER (multi-GPU)   | cluster    | Nemotron-3-Super-120B  (spark-nemotron-120B)            |
 | hintonator  | RTX 5090 (single GPU)           | 32 GB      | nemotron-cascade-2  (primary), nomic-embed-text         |
@@ -316,6 +360,13 @@ def _model_to_dict(m) -> dict:
 
 def run_intelligence_job() -> None:
     """Main scheduled job: assembles metrics, calls LLM for analysis, updates DuckDB cache."""
+    global _job_running, _job_started_at
+    with _job_state_lock:
+        if _job_running:
+            log.info("intelligence job already running — skipping duplicate trigger")
+            return
+        _job_running = True
+        _job_started_at = datetime.now(timezone.utc)
     log.info("intelligence job started")
     health_summary = None
     anomalies = []
@@ -396,15 +447,25 @@ def run_intelligence_job() -> None:
                     "4. Only recommend changes that are grounded in what is observable from the "
                     "provided metrics (e.g. high latency on a latency-sensitive path, low utilization "
                     "suggesting a misrouted workload, error spikes on a specific model).\n\n"
-                    "Each recommendation must include a direct head-to-head comparison:\n"
-                    "  - Current situation: [model X] is handling [use case], "
-                    "weakness observed: [from metrics or known architectural limitation].\n"
-                    "  - Better fit: [model Y] on [node] ([single-GPU or DGX cluster]) "
+                    "Each recommendation body MUST follow this exact structure (Markdown):\n"
+                    "1. **Current situation**: [model X] handles [use case]; "
+                    "observed weakness: [from metrics or known architectural limitation].\n"
+                    "2. **Better fit**: [model Y] on [node] ([single-GPU or DGX SPARK cluster]) "
                     "because [architectural reason — context window, training focus, etc.].\n"
-                    "  - Direct comparison: [model Y] vs [model X]: "
-                    "[2–3 concrete architectural differentiators — no fabricated numbers].\n\n"
-                    "Return a JSON array of up to 3 objects with keys: "
-                    "title (string), body (string). "
+                    "3. A Markdown comparison table:\n"
+                    "   | Property | Current ([model X]) | Suggested ([model Y]) |\n"
+                    "   |----------|--------------------|-----------------------|\n"
+                    "   | Context Window | ... | ... |\n"
+                    "   | Architecture / Training Focus | ... | ... |\n"
+                    "   | Best-fit tasks | ... | ... |\n"
+                    "   | Deployment | ... (node, VRAM) | ... (node, VRAM) |\n\n"
+                    "Return a JSON array of up to 3 objects with these keys:\n"
+                    "  - title (string): short recommendation headline\n"
+                    "  - use_case (string): the task/workload being addressed, e.g. 'Tool-calling'\n"
+                    "  - current_model (string): the model currently handling it\n"
+                    "  - suggested_model (string): the recommended replacement\n"
+                    "  - node (string): target deployment node, e.g. 'hintonator (RTX 5090, 32GB)'\n"
+                    "  - body (string, Markdown): full analysis per the structure above\n"
                     "Return ONLY valid JSON, no other text."
                 ),
             },
@@ -430,9 +491,22 @@ def run_intelligence_job() -> None:
         log.exception("recommendations call_llm failed: %s", exc)
         recommendations = []
 
-    # Step 5: HF model search
+    # Step 5: HF model search — informed by recommendation keywords
+    hf_hints: list[str] = []
+    hf_search_rationale: str = ""
     try:
-        hf_models = search_hf_models()
+        hf_hints = _extract_hf_hints(recommendations)
+    except Exception as exc:
+        log.warning("_extract_hf_hints failed: %s", exc)
+    if hf_hints:
+        hf_search_rationale = (
+            f"Searched HuggingFace for {', '.join(hf_hints)} models "
+            "based on current recommendations."
+        )
+    else:
+        hf_search_rationale = "Searched HuggingFace for recent NVFP4/FP8 NVIDIA instruct models."
+    try:
+        hf_models = search_hf_models(hints=hf_hints)
     except Exception as exc:
         log.exception("search_hf_models failed: %s", exc)
         hf_models = []
@@ -467,13 +541,28 @@ def run_intelligence_job() -> None:
         "anomalies": anomalies,
         "recommendations": recommendations,
         "hf_models": hf_models_dicts,
+        "hf_search_rationale": hf_search_rationale,
     }
     with _cache_lock:
         global _cache
         _cache = new_cache
 
+    with _job_state_lock:
+        _job_running = False
+        _job_started_at = None
+
     log.info("intelligence job complete: anomalies=%d, recommendations=%d, hf_models=%d",
              len(anomalies), len(recommendations), len(hf_models))
+
+
+def run_intelligence_job_async() -> bool:
+    """Fire run_intelligence_job in a daemon thread. Returns False if already running."""
+    with _job_state_lock:
+        if _job_running:
+            return False
+    t = threading.Thread(target=run_intelligence_job, daemon=True, name="intelligence-on-demand")
+    t.start()
+    return True
 
 
 # ---------------------------------------------------------------------------

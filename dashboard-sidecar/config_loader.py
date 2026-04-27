@@ -163,3 +163,8 @@ def register_sighup(path: str) -> None:
     def handler(signum, frame):
         load_config(path)
     signal.signal(signal.SIGHUP, handler)
+
+
+def reload_config(path: str = "/app/config.yaml") -> None:
+    """Reload config.yaml into memory (for on-demand refresh)."""
+    load_config(path)

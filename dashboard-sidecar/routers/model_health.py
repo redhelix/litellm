@@ -1,8 +1,10 @@
 import logging
 import threading
+import urllib.request
+import urllib.error
+import socket
 from urllib.parse import urlparse
 
-import requests as http_requests
 from fastapi import APIRouter
 
 from config_loader import get_model_info_map, CLOUD_HOSTS
@@ -25,13 +27,15 @@ def classify_health(api_base: str | None) -> str:
     if _is_cloud(api_base):
         return "unknown"
     try:
-        http_requests.get(api_base, timeout=3)
+        req = urllib.request.Request(api_base, method="GET")
+        urllib.request.urlopen(req, timeout=3)
         return "up"
-    except (http_requests.exceptions.ConnectionError,
-            http_requests.exceptions.Timeout):
+    except urllib.error.HTTPError:
+        return "up"  # got an HTTP response — server is reachable
+    except (urllib.error.URLError, socket.timeout, OSError):
         return "down"
     except Exception:
-        return "up"  # got a response of some kind
+        return "up"
 
 
 def ping_models_job() -> None:

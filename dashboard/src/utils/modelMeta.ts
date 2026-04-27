@@ -18,21 +18,42 @@ function stripPrefix(model: string): string {
 
 /**
  * extractSize — regex scan for NN[Bb] in the model slug.
- * Returns e.g. "35B", "7B", or "?" if nothing matches.
+ * Returns e.g. "35B", "7B", or null if nothing matches.
  */
-export function extractSize(backendModel: string): string {
+export function extractSize(backendModel: string): string | null {
   const m = backendModel.match(/(\d+(?:\.\d+)?)[Bb]/)
-  if (!m) return '?'
+  if (!m) return null
   return `${m[1]}B`
 }
 
 /**
- * isHfPath — true if stripping the provider prefix leaves an org/model slug.
- * Used to decide whether to render a HuggingFace link.
+ * extractQuant — detect quantization scheme from model slug.
+ * Matches NVFP4, FP8, FP16, BF16, Q4_K_M, Q8_0, AWQ, GPTQ, etc.
+ * Returns the matched string or null.
+ */
+export function extractQuant(backendModel: string): string | null {
+  const m = backendModel.match(/\b(NVFP4|FP8|FP16|BF16|INT8|INT4|Q\d+_\w+|AWQ|GPTQ|GGUF|GGML)\b/i)
+  if (!m) return null
+  return m[1].toUpperCase()
+}
+
+// Known cloud sub-namespaces that appear after stripping openrouter/ prefix —
+// these are NOT HuggingFace paths.
+const CLOUD_ORGS = new Set([
+  'google', 'openai', 'anthropic', 'moonshotai', 'minimax', 'deepseek',
+  'mistralai', 'meta-llama', 'cohere', 'perplexity', 'z-ai', 'nvidia',
+  'qwen', 'x-ai', 'amazon',
+])
+
+/**
+ * isHfPath — true if stripping the provider prefix leaves an org/model slug
+ * that looks like a HuggingFace user/repo path (not a cloud provider sub-path).
  */
 export function isHfPath(backendModel: string): boolean {
   const remainder = stripPrefix(backendModel)
-  return remainder.includes('/')
+  if (!remainder.includes('/')) return false
+  const org = remainder.split('/')[0].toLowerCase()
+  return !CLOUD_ORGS.has(org)
 }
 
 /**
@@ -82,14 +103,36 @@ function parsePort(apiBase: string | null): string | null {
 }
 
 /**
+ * isPrivateHost — true for any host that is clearly on a local/private network:
+ *   - No dots → Docker internal DNS (e.g. "ollama", "litellm-proxy")
+ *   - RFC 1918: 10.x, 172.16-31.x, 192.168.x
+ *   - Tailscale CGNAT: 100.64.0.0/10  (100.64–100.127)
+ *   - localhost / loopback
+ */
+function isPrivateHost(host: string): boolean {
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return true
+  if (!host.includes('.')) return true  // plain Docker service name
+  if (/^10\./.test(host)) return true
+  if (/^192\.168\./.test(host)) return true
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(host)) return true
+  // Tailscale: 100.64.0.0/10 → 100.64.x.x – 100.127.x.x
+  const ts = host.match(/^100\.(\d+)\./)
+  if (ts && +ts[1] >= 64 && +ts[1] <= 127) return true
+  return false
+}
+
+/**
  * resolveServer — maps api_base to a friendly server name.
- * Returns "cloud" for null, cloud hostnames, or unknown hosts.
+ * Prefers HOST_MAP for known nodes; falls back to network-range detection
+ * so new local servers are not misclassified as cloud.
  */
 export function resolveServer(apiBase: string | null): string {
   const host = parseHost(apiBase)
   if (!host) return 'cloud'
   if (CLOUD_HOSTS.has(host)) return 'cloud'
-  return HOST_MAP[host] ?? 'cloud'
+  if (HOST_MAP[host]) return HOST_MAP[host]
+  if (isPrivateHost(host)) return 'local'
+  return 'cloud'
 }
 
 /**
