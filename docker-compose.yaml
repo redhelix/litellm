@@ -49,6 +49,7 @@ services:
       - ./weave_callback.py:/app/weave_callback.py
       - ./fix_json_tool_calls.py:/app/fix_json_tool_calls.py
       - ./merge_system_messages.py:/app/merge_system_messages.py
+      - ./tool_result_injection_guard.py:/app/tool_result_injection_guard.py
       - ./firecrawl_search_transform.py:/usr/lib/python3.13/site-packages/litellm/llms/firecrawl/search/transformation.py
       - /opt/litellm/tool_repairs.jsonl:/opt/litellm/tool_repairs.jsonl
     environment:
