@@ -211,6 +211,7 @@ litellm_settings:
   callbacks:
   - merge_system_messages.proxy_handler_instance
   - fix_json_tool_calls.proxy_handler_instance
+  - tool_result_injection_guard.proxy_handler_instance
   - prometheus
   # strip_think removed 2026-04-12: no active model benefits.
   # spark-learner: neutral. nemotron-120B: -2 tests. cascade-2: -19 tests.
