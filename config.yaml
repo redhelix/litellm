@@ -18,21 +18,21 @@ model_list:
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
-    max_tokens: 32768
+    max_tokens: 8192
     timeout: 600
   model_info:
-    max_input_tokens: 32768
-    max_tokens: 32768
+    max_input_tokens: 24576
+    max_tokens: 8192
     supports_function_calling: true
 - model_name: spark-002-qwen3-coder-next
   litellm_params:
-    model: openai/qwen3-coder-next
+    model: openai/spark-002-qwen3-coder-next
     api_base: http://192.168.50.79:9005/v1
     api_key: none
     max_tokens: 32768
     timeout: 600
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
 - model_name: hintonator-cascade-2-30b
@@ -182,6 +182,7 @@ router_settings:
   context_window_fallbacks:
     - {"hintonator-cascade-2-30b": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-001-qwen3.6-27b-pq55": ["kimi-k2.6", "gemini-flash"]}
+    - {"spark-002-qwen3-coder-next": ["kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["kimi-k2.6", "gemini-flash"]}
 litellm_settings:
   drop_params: true
