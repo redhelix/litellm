@@ -35,6 +35,115 @@ model_list:
     max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
+- model_name: spark-003-qwen3.6-35b-heretic
+  litellm_params:
+    model: openai/qwen36-35b-heretic
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.8
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: spark-003-qwen3.6-35b-fast
+  litellm_params:
+    model: openai/qwen36-fast
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: spark-003-qwen3.6-35b-deep
+  litellm_params:
+    model: openai/qwen36-deep
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.2
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+# Round-robin groups: heretic/fast/deep load-balanced across spark-001 + spark-003
+- model_name: qwen36-heretic
+  litellm_params:
+    model: openai/qwen36-35b-heretic
+    api_base: http://100.115.141.106:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.8
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: qwen36-heretic
+  litellm_params:
+    model: openai/qwen36-35b-heretic
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.8
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: qwen36-fast
+  litellm_params:
+    model: openai/qwen36-fast
+    api_base: http://100.115.141.106:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: qwen36-fast
+  litellm_params:
+    model: openai/qwen36-fast
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: qwen36-deep
+  litellm_params:
+    model: openai/qwen36-deep
+    api_base: http://100.115.141.106:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.2
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+- model_name: qwen36-deep
+  litellm_params:
+    model: openai/qwen36-deep
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.2
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
 - model_name: spark-001-qwen3.6-27b-pq55
   litellm_params:
     model: openai/qwen36-27b-pq55
@@ -59,6 +168,7 @@ model_list:
     extra_body:
       chat_template_kwargs:
         enable_thinking: false
+    parallel_tool_calls: false
   model_info:
     max_input_tokens: 200000
     max_tokens: 32768
