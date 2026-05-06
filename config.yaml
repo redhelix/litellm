@@ -19,6 +19,10 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0
+    repetition_penalty: 1.05
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
@@ -55,6 +59,10 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0
+    repetition_penalty: 1.05
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
@@ -104,6 +112,10 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0
+    repetition_penalty: 1.05
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
@@ -116,6 +128,10 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0
+    repetition_penalty: 1.05
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
