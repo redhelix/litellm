@@ -203,9 +203,9 @@ model_list:
     max_input_tokens: 200000
     max_tokens: 32768
     supports_function_calling: true
-- model_name: spark-002-qwen3-coder-next
+- model_name: spark-002-qwen3.6-27b
   litellm_params:
-    model: openai/spark-002-qwen3-coder-next
+    model: openai/spark-002-qwen3.6-27b
     api_base: http://192.168.50.79:9005/v1
     api_key: none
     max_tokens: 32768
@@ -361,7 +361,7 @@ router_settings:
   context_window_fallbacks:
     - {"hintonator-cascade-2-30b": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-001-qwen3.6-27b-pq55": ["kimi-k2.6", "gemini-flash"]}
-    - {"spark-002-qwen3-coder-next": ["kimi-k2.6", "gemini-flash"]}
+    - {"spark-002-qwen3.6-27b": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-003-qwen3.6-27b": ["kimi-k2.6", "gemini-flash"]}
     - {"aeon-ultimate": ["kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["kimi-k2.6", "gemini-flash"]}
@@ -383,7 +383,7 @@ litellm_settings:
   cache_models:
   - hintonator-cascade-2-30b
   - spark-001-qwen3.6-27b-pq55
-  - spark-002-qwen3-coder-next
+  - spark-002-qwen3.6-27b
   - spark-003-qwen3.6-27b
   - aeon-ultimate
   - docker-gpu-gemma4-26B
