@@ -145,12 +145,52 @@ class FixJsonToolCallsCallback(CustomLogger):
             self._fix_messages(messages)
         return data
 
+    @staticmethod
+    def _parse_xml_tool_calls(content: str):
+        """Convert Hermes-format <tool_call> XML in content to OpenAI tool_calls list.
+
+        LiteLLM 1.83.x regression: when a model returns finish_reason=tool_calls,
+        LiteLLM re-serializes structured tool_calls back to the model's raw XML format
+        instead of passing through the OpenAI-format tool_calls from vLLM.
+        Returns (tool_calls_list, cleaned_content) or (None, content) if no XML found.
+        """
+        if not content or "<tool_call>" not in content:
+            return None, content
+
+        tool_calls = []
+        tc_pattern = re.compile(
+            r"<tool_call>\s*<function=([^>]+)>(.*?)</function>\s*</tool_call>",
+            re.DOTALL,
+        )
+        param_pattern = re.compile(
+            r"<parameter=([^>]+)>\s*(.*?)\s*</parameter>",
+            re.DOTALL,
+        )
+        for i, m in enumerate(tc_pattern.finditer(content)):
+            func_name = m.group(1).strip()
+            params = {}
+            for pm in param_pattern.finditer(m.group(2)):
+                params[pm.group(1).strip()] = pm.group(2).strip()
+            tool_calls.append({
+                "id": f"call_{i}_{func_name[:16]}",
+                "type": "function",
+                "function": {"name": func_name, "arguments": json.dumps(params)},
+            })
+
+        if not tool_calls:
+            return None, content
+
+        cleaned = tc_pattern.sub("", content).strip() or None
+        return tool_calls, cleaned
+
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
         """Fix JSON in model response tool calls. Emit repair signal when payload changed.
 
-        Join key (RESEARCH pitfall 3): response.id is the model-returned chat completion
-        ID that LiteLLM stores as LiteLLM_SpendLogs.request_id. The internal UUID call
-        identifier would produce zero-match joins against SpendLogs — use response.id.
+        Also recovers Hermes-format <tool_call> XML from content into structured
+        tool_calls (LiteLLM 1.83.x regression where vLLM tool_calls are re-serialized
+        to XML instead of being passed through in OpenAI format).
+
+        Join key: response.id maps to LiteLLM_SpendLogs.request_id.
         """
         if not hasattr(response, "choices"):
             return response
@@ -159,6 +199,31 @@ class FixJsonToolCallsCallback(CustomLogger):
             msg = getattr(choice, "message", None)
             if not msg:
                 continue
+
+            # Recover tool_calls from XML content (LiteLLM 1.83.x regression)
+            content = getattr(msg, "content", None)
+            if content and not getattr(msg, "tool_calls", None):
+                xml_tool_calls, cleaned_content = self._parse_xml_tool_calls(content)
+                if xml_tool_calls:
+                    try:
+                        from litellm.types.utils import ChatCompletionMessageToolCall, Function
+                        msg.tool_calls = [
+                            ChatCompletionMessageToolCall(
+                                id=tc["id"],
+                                type="function",
+                                function=Function(
+                                    name=tc["function"]["name"],
+                                    arguments=tc["function"]["arguments"],
+                                ),
+                            )
+                            for tc in xml_tool_calls
+                        ]
+                        msg.content = cleaned_content
+                        choice.finish_reason = "tool_calls"
+                        repaired = True
+                    except Exception as e:
+                        print(f"fix_json: XML tool_call recovery failed: {e}", file=sys.stderr)
+
             tool_calls = getattr(msg, "tool_calls", None)
             if not tool_calls:
                 continue
