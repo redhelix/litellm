@@ -190,15 +190,15 @@ model_list:
     supports_function_calling: true
 - model_name: hintonator-qwen3-30b-a3b
   litellm_params:
-    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, ~200 tok/s)
+    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, max_ctx=40960)
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
     api_key: none
-    max_tokens: 32768
+    max_tokens: 8192
     timeout: 600
   model_info:
-    max_input_tokens: 131072
-    max_tokens: 32768
+    max_input_tokens: 40960
+    max_tokens: 8192
     supports_function_calling: true
 - model_name: hintonator-prisma-scout-27b
   litellm_params:
@@ -206,10 +206,10 @@ model_list:
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
     api_key: none
-    max_tokens: 32768
+    max_tokens: 8192
     timeout: 600
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 40960
     max_tokens: 32768
     supports_function_calling: true
 - model_name: nomic-embed-text
