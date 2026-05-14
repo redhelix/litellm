@@ -88,6 +88,9 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0.8
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
@@ -100,6 +103,9 @@ model_list:
     max_tokens: 32768
     timeout: 600
     temperature: 0.8
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 262144
     max_tokens: 32768
@@ -182,10 +188,22 @@ model_list:
     max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
+- model_name: hintonator-qwen3-30b-a3b
+  litellm_params:
+    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, ~200 tok/s)
+    model: openai/qwen3-30b-a3b
+    api_base: http://192.168.50.73:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+  model_info:
+    max_input_tokens: 131072
+    max_tokens: 32768
+    supports_function_calling: true
 - model_name: hintonator-prisma-scout-27b
   litellm_params:
-    # Backend: hintonator RTX 5090 — PrismaSCOUT 27B thinking model
-    model: openai/prisma-scout-27b
+    # Alias for backward compat — routes to Qwen3-30B-A3B
+    model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
     api_key: none
     max_tokens: 32768
@@ -290,7 +308,46 @@ search_tools:
 router_settings:
   routing_strategy: simple-shuffle
   fallbacks:
+  - hintonator-qwen3-30b-a3b:
+    - kimi-k2.6
+    - gemini-flash
   - hintonator-prisma-scout-27b:
+    - kimi-k2.6
+    - gemini-flash
+  - qwen36-heretic:
+    - qwen36-deep
+    - kimi-k2.6
+    - gemini-flash
+  - qwen36-fast:
+    - qwen36-heretic
+    - kimi-k2.6
+    - gemini-flash
+  - qwen36-deep:
+    - qwen36-heretic
+    - kimi-k2.6
+    - gemini-flash
+  - spark-001-qwen3.6-35b-heretic:
+    - spark-003-qwen3.6-35b-heretic
+    - kimi-k2.6
+    - gemini-flash
+  - spark-001-qwen3.6-35b-fast:
+    - spark-003-qwen3.6-35b-fast
+    - kimi-k2.6
+    - gemini-flash
+  - spark-001-qwen3.6-35b-deep:
+    - spark-003-qwen3.6-35b-deep
+    - kimi-k2.6
+    - gemini-flash
+  - spark-003-qwen3.6-35b-heretic:
+    - spark-001-qwen3.6-35b-heretic
+    - kimi-k2.6
+    - gemini-flash
+  - spark-003-qwen3.6-35b-fast:
+    - spark-001-qwen3.6-35b-fast
+    - kimi-k2.6
+    - gemini-flash
+  - spark-003-qwen3.6-35b-deep:
+    - spark-001-qwen3.6-35b-deep
     - kimi-k2.6
     - gemini-flash
   - kimi-k2.6:
@@ -324,6 +381,7 @@ router_settings:
     ServiceUnavailableError: 0
   allowed_fails: 25
   context_window_fallbacks:
+    - {"hintonator-qwen3-30b-a3b": ["kimi-k2.6", "gemini-flash"]}
     - {"hintonator-prisma-scout-27b": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-002-qwen3.6-27b": ["kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["kimi-k2.6", "gemini-flash"]}
@@ -343,6 +401,7 @@ litellm_settings:
     port: os.environ/REDIS_PORT
     ttl: 3600
   cache_models:
+  - hintonator-qwen3-30b-a3b
   - hintonator-prisma-scout-27b
   - spark-002-qwen3.6-27b
   - docker-gpu-gemma4-26B
