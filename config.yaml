@@ -371,6 +371,9 @@ router_settings:
     - nano-banana-2
   - nano-banana-2:
     - nano-banana-pro
+  - docker-gpu-gemma4-26B:
+    - gemini-flash
+    - kimi-k2.6
   num_retries: 5
   retry_after: 5
   timeout: 60
