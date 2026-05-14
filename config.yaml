@@ -309,72 +309,72 @@ router_settings:
   routing_strategy: simple-shuffle
   fallbacks:
   - hintonator-qwen3-30b-a3b:
-    - kimi-k2.6
-    - gemini-flash
+      - kimi-k2.6
+      - gemini-flash
   - hintonator-prisma-scout-27b:
-    - kimi-k2.6
-    - gemini-flash
+      - kimi-k2.6
+      - gemini-flash
   - qwen36-heretic:
-    - qwen36-deep
-    - kimi-k2.6
-    - gemini-flash
+      - qwen36-deep
+      - kimi-k2.6
+      - gemini-flash
   - qwen36-fast:
-    - qwen36-heretic
-    - kimi-k2.6
-    - gemini-flash
+      - qwen36-heretic
+      - kimi-k2.6
+      - gemini-flash
   - qwen36-deep:
-    - qwen36-heretic
-    - kimi-k2.6
-    - gemini-flash
+      - qwen36-heretic
+      - kimi-k2.6
+      - gemini-flash
   - spark-001-qwen3.6-35b-heretic:
-    - spark-003-qwen3.6-35b-heretic
-    - kimi-k2.6
-    - gemini-flash
+      - spark-003-qwen3.6-35b-heretic
+      - kimi-k2.6
+      - gemini-flash
   - spark-001-qwen3.6-35b-fast:
-    - spark-003-qwen3.6-35b-fast
-    - kimi-k2.6
-    - gemini-flash
+      - spark-003-qwen3.6-35b-fast
+      - kimi-k2.6
+      - gemini-flash
   - spark-001-qwen3.6-35b-deep:
-    - spark-003-qwen3.6-35b-deep
-    - kimi-k2.6
-    - gemini-flash
+      - spark-003-qwen3.6-35b-deep
+      - kimi-k2.6
+      - gemini-flash
   - spark-003-qwen3.6-35b-heretic:
-    - spark-001-qwen3.6-35b-heretic
-    - kimi-k2.6
-    - gemini-flash
+      - spark-001-qwen3.6-35b-heretic
+      - kimi-k2.6
+      - gemini-flash
   - spark-003-qwen3.6-35b-fast:
-    - spark-001-qwen3.6-35b-fast
-    - kimi-k2.6
-    - gemini-flash
+      - spark-001-qwen3.6-35b-fast
+      - kimi-k2.6
+      - gemini-flash
   - spark-003-qwen3.6-35b-deep:
-    - spark-001-qwen3.6-35b-deep
-    - kimi-k2.6
-    - gemini-flash
-  - kimi-k2.6:
-    - gemini-flash
-  - gemini-flash:
-    - kimi-k2.6
-  - gemini-pro:
-    - kimi-k2.6
-    - gemini-flash
-  - minimax-m2.7:
-    - gemini-flash
-    - kimi-k2.6
-  - openai/text-embedding-3-small:
-    - nomic-embed-text
-  - nomic-embed-text:
-    - openai/text-embedding-3-small
-  - gpt-4o-mini:
-    - gemini-flash
-    - kimi-k2.6
-  - nano-banana-pro:
-    - nano-banana-2
-  - nano-banana-2:
-    - nano-banana-pro
+      - spark-001-qwen3.6-35b-deep
+      - kimi-k2.6
+      - gemini-flash
   - docker-gpu-gemma4-26B:
-    - hintonator-qwen3-30b-a3b
-    - gemini-flash
-    - kimi-k2.6
+      - hintonator-qwen3-30b-a3b
+      - gemini-flash
+      - kimi-k2.6
+  - kimi-k2.6:
+      - gemini-flash
+  - gemini-flash:
+      - kimi-k2.6
+  - gemini-pro:
+      - kimi-k2.6
+      - gemini-flash
+  - minimax-m2.7:
+      - gemini-flash
+      - kimi-k2.6
+  - openai/text-embedding-3-small:
+      - nomic-embed-text
+  - nomic-embed-text:
+      - openai/text-embedding-3-small
+  - gpt-4o-mini:
+      - gemini-flash
+      - kimi-k2.6
+  - nano-banana-pro:
+      - nano-banana-2
+  - nano-banana-2:
+      - nano-banana-pro
   num_retries: 5
   retry_after: 5
   timeout: 60
