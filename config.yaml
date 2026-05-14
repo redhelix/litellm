@@ -372,6 +372,7 @@ router_settings:
   - nano-banana-2:
     - nano-banana-pro
   - docker-gpu-gemma4-26B:
+    - hintonator-qwen3-30b-a3b
     - gemini-flash
     - kimi-k2.6
   num_retries: 5
