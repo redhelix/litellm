@@ -13,7 +13,7 @@ model_list:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 262144
+    max_input_tokens: 131072
     max_tokens: 32768
     supports_function_calling: true
 - model_name: qwen36-fast
@@ -29,7 +29,7 @@ model_list:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 262144
+    max_input_tokens: 131072
     max_tokens: 32768
     supports_function_calling: true
 - model_name: qwen36-deep
@@ -41,7 +41,7 @@ model_list:
     timeout: 600
     temperature: 0.2
   model_info:
-    max_input_tokens: 262144
+    max_input_tokens: 131072
     max_tokens: 32768
     supports_function_calling: true
 - model_name: spark-002-qwen3.5-122b
