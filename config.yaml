@@ -1,10 +1,22 @@
 model_list:
-# Cluster endpoint: spark-001 (Ray head, pipeline-parallel across spark-001+003)
-# spark-003 is now a Ray worker — no standalone API. All traffic via spark-001:8000.
-- model_name: qwen36-heretic
+# spark-001 + spark-002: DeepSeek-V4-Flash TP=2 cluster
+- model_name: deepseek-v4-flash
   litellm_params:
-    model: openai/qwen36-35b-heretic
+    model: openai/deepseek-v4-flash
     api_base: http://192.168.50.83:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.6
+  model_info:
+    max_input_tokens: 1000000
+    max_tokens: 32768
+    supports_function_calling: true
+# spark-003: AEON-7 Qwen3.6-27B NVFP4 + DFlash speculative decoding
+- model_name: qwen36-27b-xs
+  litellm_params:
+    model: openai/qwen36-27b-xs
+    api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
     timeout: 600
@@ -19,12 +31,11 @@ model_list:
 - model_name: qwen36-fast
   litellm_params:
     model: openai/qwen36-fast
-    api_base: http://192.168.50.83:8000/v1
+    api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
     timeout: 600
-    temperature: 0
-    repetition_penalty: 1.05
+    temperature: 0.0
     extra_body:
       chat_template_kwargs:
         enable_thinking: false
@@ -35,35 +46,31 @@ model_list:
 - model_name: qwen36-deep
   litellm_params:
     model: openai/qwen36-deep
-    api_base: http://192.168.50.83:8000/v1
+    api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
     timeout: 600
-    temperature: 0.2
+    temperature: 0.0
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
     max_input_tokens: 131072
     max_tokens: 32768
     supports_function_calling: true
-- model_name: spark-002-qwen3.5-122b
+- model_name: qwen36-27b-aeon
   litellm_params:
-    model: openai/qwen
-    api_base: http://192.168.50.79:8000/v1
+    model: openai/qwen36-27b-xs
+    api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
     timeout: 600
+    temperature: 0.8
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
   model_info:
-    max_input_tokens: 262144
-    max_tokens: 32768
-    supports_function_calling: true
-- model_name: spark-002-qwen3.6-27b
-  litellm_params:
-    model: openai/spark-002-qwen3.6-27b
-    api_base: http://192.168.50.79:9005/v1
-    api_key: none
-    max_tokens: 32768
-    timeout: 600
-  model_info:
-    max_input_tokens: 262144
+    max_input_tokens: 200000
     max_tokens: 32768
     supports_function_calling: true
 - model_name: hintonator-qwen3-30b-a3b
@@ -187,22 +194,20 @@ search_tools:
 router_settings:
   routing_strategy: simple-shuffle
   fallbacks:
+  - deepseek-v4-flash:
+      - qwen36-27b-aeon
+      - kimi-k2.6
+      - gemini-flash
+  - qwen36-27b-aeon:
+      - deepseek-v4-flash
+      - kimi-k2.6
+      - gemini-flash
   - hintonator-qwen3-30b-a3b:
+      - qwen36-27b-aeon
       - kimi-k2.6
       - gemini-flash
   - hintonator-prisma-scout-27b:
-      - kimi-k2.6
-      - gemini-flash
-  - qwen36-heretic:
-      - qwen36-deep
-      - kimi-k2.6
-      - gemini-flash
-  - qwen36-fast:
-      - qwen36-heretic
-      - kimi-k2.6
-      - gemini-flash
-  - qwen36-deep:
-      - qwen36-heretic
+      - qwen36-27b-aeon
       - kimi-k2.6
       - gemini-flash
   - docker-gpu-gemma4-26B:
@@ -240,20 +245,22 @@ router_settings:
     ServiceUnavailableError: 0
   allowed_fails: 25
   context_window_fallbacks:
-    - {"hintonator-qwen3-30b-a3b": ["qwen36-deep", "spark-002-qwen3.6-27b", "kimi-k2.6", "gemini-flash"]}
-    - {"hintonator-prisma-scout-27b": ["qwen36-deep", "spark-002-qwen3.6-27b", "kimi-k2.6", "gemini-flash"]}
-    - {"spark-002-qwen3.6-27b": ["qwen36-deep", "kimi-k2.6", "gemini-flash"]}
-    - {"docker-gpu-gemma4-26B": ["qwen36-deep", "kimi-k2.6", "gemini-flash"]}
+    - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"hintonator-prisma-scout-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
+    - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
+    - {"qwen36-27b-aeon": ["kimi-k2.6", "gemini-flash"]}
 litellm_settings:
   drop_params: true
   set_verbose: false
   request_timeout: 600
   config_update_interval: 0  # disable DB config polling — DB failures reset context_window_fallbacks to None
   context_window_fallbacks:
-    - {"hintonator-qwen3-30b-a3b": ["qwen36-deep", "spark-002-qwen3.6-27b", "kimi-k2.6", "gemini-flash"]}
-    - {"hintonator-prisma-scout-27b": ["qwen36-deep", "spark-002-qwen3.6-27b", "kimi-k2.6", "gemini-flash"]}
-    - {"spark-002-qwen3.6-27b": ["qwen36-deep", "kimi-k2.6", "gemini-flash"]}
-    - {"docker-gpu-gemma4-26B": ["qwen36-deep", "kimi-k2.6", "gemini-flash"]}
+    - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"hintonator-prisma-scout-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
+    - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
+    - {"qwen36-27b-aeon": ["kimi-k2.6", "gemini-flash"]}
   max_tokens: 16384
   max_budget: 100.0
   budget_duration: 30d
@@ -265,9 +272,10 @@ litellm_settings:
     port: os.environ/REDIS_PORT
     ttl: 3600
   cache_models:
+  - deepseek-v4-flash
+  - qwen36-27b-aeon
   - hintonator-qwen3-30b-a3b
   - hintonator-prisma-scout-27b
-  - spark-002-qwen3.6-27b
   - docker-gpu-gemma4-26B
   - gemini-flash
   - kimi-k2.6
