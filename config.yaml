@@ -181,6 +181,14 @@ model_list:
     max_input_tokens: 32768
     max_tokens: 32768
     supports_function_calling: true
+- model_name: nousresearch/hermes-4-405b
+  litellm_params:
+    model: nousresearch/hermes-4-405b
+    api_base: https://inference-api.nousresearch.com/v1
+    custom_llm_provider: custom_openai
+    # API key stored in LiteLLM DB (added via dashboard) — not an env var
+  model_info:
+    mode: chat
 search_tools:
 - search_tool_name: searxng-search
   litellm_params:
