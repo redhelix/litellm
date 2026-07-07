@@ -91,7 +91,7 @@ model_list:
     supports_function_calling: true
 - model_name: hintonator-qwen3-30b-a3b
   litellm_params:
-    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, max_ctx=40960)
+    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, max_ctx=81920)
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
     api_key: none
