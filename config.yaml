@@ -12,10 +12,26 @@ model_list:
     max_input_tokens: 500000
     max_tokens: 32768
     supports_function_calling: true
-# spark-003: AEON-7 Qwen3.6-27B NVFP4 + DFlash speculative decoding
+# spark-003: Qwen35-122B hybrid Mamba/attention INT4 (replaced AEON 27B 2026-07-05; bench 90/100)
+- model_name: spark-003-qwen3.5-122b
+  litellm_params:
+    model: openai/spark-003-qwen3.5-122b
+    api_base: http://192.168.50.70:8000/v1
+    api_key: none
+    max_tokens: 32768
+    timeout: 600
+    temperature: 0.6
+    extra_body:
+      chat_template_kwargs:
+        enable_thinking: false
+  model_info:
+    max_input_tokens: 262144
+    max_tokens: 32768
+    supports_function_calling: true
+# qwen36-27b-* names retained as back-compat aliases; now resolve to Qwen35-122B on :70 (AEON served-name retired)
 - model_name: qwen36-27b-xs
   litellm_params:
-    model: openai/qwen36-27b-xs
+    model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
@@ -25,27 +41,27 @@ model_list:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
 - model_name: qwen36-fast
   litellm_params:
-    model: openai/qwen36-fast
+    model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
-    timeout: 600
+    timeout: 180
     temperature: 0.0
     extra_body:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
 - model_name: qwen36-deep
   litellm_params:
-    model: openai/qwen36-deep
+    model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
@@ -55,12 +71,12 @@ model_list:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
 - model_name: qwen36-27b-aeon
   litellm_params:
-    model: openai/qwen36-27b-xs
+    model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
     max_tokens: 32768
@@ -70,7 +86,7 @@ model_list:
       chat_template_kwargs:
         enable_thinking: false
   model_info:
-    max_input_tokens: 200000
+    max_input_tokens: 262144
     max_tokens: 32768
     supports_function_calling: true
 - model_name: hintonator-qwen3-30b-a3b
@@ -85,19 +101,7 @@ model_list:
     max_input_tokens: 40960
     max_tokens: 8192
     supports_function_calling: true
-- model_name: hintonator-prisma-scout-27b
-  litellm_params:
-    # Alias for backward compat — routes to Qwen3-30B-A3B
-    model: openai/qwen3-30b-a3b
-    api_base: http://192.168.50.73:8000/v1
-    api_key: none
-    max_tokens: 8192
-    max_completion_tokens: 8192
-    timeout: 600
-  model_info:
-    max_input_tokens: 40960
-    max_tokens: 8192
-    supports_function_calling: true
+    supports_vision: true
 - model_name: nomic-embed-text
   litellm_params:
     model: openai/nomic-embed-text
@@ -160,14 +164,14 @@ model_list:
     model: gemini/gemini-3-pro-image-preview
     api_key: os.environ/GEMINI_API_KEY
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 8192
 - model_name: nano-banana-2
   litellm_params:
     model: gemini/gemini-3.1-flash-image-preview
     api_key: os.environ/GEMINI_API_KEY
   model_info:
-    max_input_tokens: 131072
+    max_input_tokens: 262144
     max_tokens: 8192
 - model_name: docker-gpu-gemma4-26B
   litellm_params:
@@ -181,14 +185,6 @@ model_list:
     max_input_tokens: 32768
     max_tokens: 32768
     supports_function_calling: true
-- model_name: nousresearch/hermes-4-405b
-  litellm_params:
-    model: nousresearch/hermes-4-405b
-    api_base: https://inference-api.nousresearch.com/v1
-    custom_llm_provider: custom_openai
-    # API key stored in LiteLLM DB (added via dashboard) — not an env var
-  model_info:
-    mode: chat
 - model_name: gpt-4o
   litellm_params:
     # ai-tagger (Obsidian) local alias -> hintonator qwen3-30b-a3b (RTX 5090); replaces Google Gemini
@@ -201,6 +197,14 @@ model_list:
     max_input_tokens: 40960
     max_tokens: 8192
     supports_function_calling: true
+- model_name: nousresearch/hermes-4-405b
+  litellm_params:
+    model: nousresearch/hermes-4-405b
+    api_base: https://inference-api.nousresearch.com/v1
+    custom_llm_provider: custom_openai
+    # API key stored in LiteLLM DB (added via dashboard) — not an env var
+  model_info:
+    mode: chat
 search_tools:
 - search_tool_name: searxng-search
   litellm_params:
@@ -214,6 +218,14 @@ search_tools:
 router_settings:
   routing_strategy: simple-shuffle
   fallbacks:
+  - spark-003-qwen3.5-122b:
+      - deepseek-v4-flash
+      - kimi-k2.6
+      - gemini-flash
+  - qwen36-fast:
+      - deepseek-v4-flash
+      - kimi-k2.6
+      - gemini-flash
   - deepseek-v4-flash:
       - qwen36-27b-aeon
       - kimi-k2.6
@@ -223,10 +235,6 @@ router_settings:
       - kimi-k2.6
       - gemini-flash
   - hintonator-qwen3-30b-a3b:
-      - qwen36-27b-aeon
-      - kimi-k2.6
-      - gemini-flash
-  - hintonator-prisma-scout-27b:
       - qwen36-27b-aeon
       - kimi-k2.6
       - gemini-flash
@@ -263,12 +271,13 @@ router_settings:
     ConnectError: 0
     ConnectionError: 0
     ServiceUnavailableError: 0
+    TimeoutErrorRetries: 2
   allowed_fails: 25
   context_window_fallbacks:
     - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
-    - {"hintonator-prisma-scout-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
+    - {"spark-003-qwen3.5-122b": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"qwen36-27b-aeon": ["kimi-k2.6", "gemini-flash"]}
 litellm_settings:
   drop_params: true
@@ -277,9 +286,9 @@ litellm_settings:
   config_update_interval: 0  # disable DB config polling — DB failures reset context_window_fallbacks to None
   context_window_fallbacks:
     - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
-    - {"hintonator-prisma-scout-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
+    - {"spark-003-qwen3.5-122b": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"qwen36-27b-aeon": ["kimi-k2.6", "gemini-flash"]}
   max_tokens: 16384
   max_budget: 100.0
@@ -293,9 +302,9 @@ litellm_settings:
     ttl: 3600
   cache_models:
   - deepseek-v4-flash
+  - spark-003-qwen3.5-122b
   - qwen36-27b-aeon
   - hintonator-qwen3-30b-a3b
-  - hintonator-prisma-scout-27b
   - docker-gpu-gemma4-26B
   - gemini-flash
   - kimi-k2.6
