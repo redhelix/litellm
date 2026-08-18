@@ -205,6 +205,24 @@ model_list:
     # API key stored in LiteLLM DB (added via dashboard) — not an env var
   model_info:
     mode: chat
+- model_name: deepseek-v4-pro
+  litellm_params:
+    model: openai/deepseek-v4-pro
+    api_base: https://opencode.ai/zen/v1
+    api_key: os.environ/OPENCODE_API_KEY
+    timeout: 600
+  model_info:
+    mode: chat
+    supports_function_calling: true
+- model_name: mimo-v2.5
+  litellm_params:
+    model: openai/mimo-v2.5-free
+    api_base: https://opencode.ai/zen/v1
+    api_key: os.environ/OPENCODE_API_KEY
+    timeout: 600
+  model_info:
+    mode: chat
+    supports_function_calling: true
 search_tools:
 - search_tool_name: searxng-search
   litellm_params:

@@ -40,8 +40,8 @@ INJECTION_GUARD_LOG = os.environ.get(
 
 # Field names that are suspicious regardless of content length/pattern
 _SUSPICIOUS_FIELD_NAMES = {
-    "internal_note", "note", "notes", "instructions", "instruction",
-    "system_note", "system_message", "override", "directive", "command",
+    "internal_note", "instructions", "instruction",
+    "system_note", "system_message", "override", "directive",
     "admin_note", "compliance_note", "compliance_requirement",
 }
 
