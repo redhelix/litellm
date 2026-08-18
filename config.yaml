@@ -5,6 +5,8 @@ model_list:
     model: openai/deepseek-v4-flash
     api_base: http://192.168.50.83:8000/v1
     api_key: none
+    cache:
+      no-cache: true
     max_tokens: 32768
     timeout: 600
     temperature: 0.6
@@ -15,6 +17,8 @@ model_list:
 # spark-003: Qwen35-122B hybrid Mamba/attention INT4 (replaced AEON 27B 2026-07-05; bench 90/100)
 - model_name: spark-003-qwen3.5-122b
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
@@ -31,6 +35,8 @@ model_list:
 # qwen36-27b-* names retained as back-compat aliases; now resolve to Qwen35-122B on :70 (AEON served-name retired)
 - model_name: qwen36-27b-xs
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
@@ -46,6 +52,8 @@ model_list:
     supports_function_calling: true
 - model_name: qwen36-fast
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
@@ -64,6 +72,8 @@ model_list:
     supports_function_calling: true
 - model_name: qwen36-deep
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
@@ -81,6 +91,8 @@ model_list:
     supports_function_calling: true
 - model_name: qwen36-27b-aeon
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/spark-003-qwen3.5-122b
     api_base: http://192.168.50.70:8000/v1
     api_key: none
@@ -96,6 +108,8 @@ model_list:
     supports_function_calling: true
 - model_name: hintonator-qwen3-30b-a3b
   litellm_params:
+    cache:
+      no-cache: true
     # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, max_ctx=81920)
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
@@ -180,6 +194,8 @@ model_list:
     max_tokens: 8192
 - model_name: docker-gpu-gemma4-26B
   litellm_params:
+    cache:
+      no-cache: true
     model: openai/gemma-4-26b-a4b
     api_base: http://192.168.50.25:8080/v1
     api_key: none
@@ -192,6 +208,8 @@ model_list:
     supports_function_calling: true
 - model_name: gpt-4o
   litellm_params:
+    cache:
+      no-cache: true
     # ai-tagger (Obsidian) local alias -> hintonator qwen3-30b-a3b (RTX 5090); replaces Google Gemini
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
@@ -204,6 +222,8 @@ model_list:
     supports_function_calling: true
 - model_name: nousresearch/hermes-4-405b
   litellm_params:
+    cache:
+      no-cache: true
     model: nousresearch/hermes-4-405b
     api_base: https://inference-api.nousresearch.com/v1
     custom_llm_provider: custom_openai
@@ -323,17 +343,17 @@ litellm_settings:
     host: os.environ/REDIS_HOST
     port: os.environ/REDIS_PORT
     ttl: 3600
-  cache_models:
-  - deepseek-v4-flash
-  - spark-003-qwen3.5-122b
-  - qwen36-27b-aeon
-  - hintonator-qwen3-30b-a3b
-  - docker-gpu-gemma4-26B
-  - gemini-flash
-  - kimi-k2.6
-  - gemini-pro
-  - minimax-m2.7
-  - gpt-4o-mini
+  # NOTE: there is no `cache_models` setting in LiteLLM — a key by that name
+  # lived here for a long time and did nothing, so `cache: true` was caching
+  # every model. Per-model exclusion is done with `cache: {no-cache: true}` in
+  # that model's litellm_params; see the local routes above.
+  #
+  # Every model that participates in an agent loop (Hermes default, MoA
+  # references and aggregator, delegation, auxiliary tasks) is excluded. A cache
+  # hit returns the identical completion for an identical request, so an agent
+  # that re-sends the same context gets the same tool call back and cannot break
+  # out. That is what produced the repeated "you have read this exact file
+  # region N times in a row" guard trips.
   callbacks:
   - merge_system_messages.proxy_handler_instance
   - fix_json_tool_calls.proxy_handler_instance
