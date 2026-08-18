@@ -135,6 +135,8 @@ model_list:
     timeout: 60
 - model_name: gemini-flash
   litellm_params:
+    cache:
+      no-cache: true
     model: openrouter/google/gemini-2.5-flash
     api_key: os.environ/OPENROUTER_API_KEY
   model_info:
@@ -149,6 +151,8 @@ model_list:
     max_tokens: 65536
 - model_name: kimi-k2.6
   litellm_params:
+    cache:
+      no-cache: true
     model: openrouter/moonshotai/kimi-k2.6
     api_key: os.environ/OPENROUTER_API_KEY
   model_info:
@@ -156,6 +160,8 @@ model_list:
     max_tokens: 65536
 - model_name: gemini-pro
   litellm_params:
+    cache:
+      no-cache: true
     model: openrouter/google/gemini-2.5-pro
     api_key: os.environ/OPENROUTER_API_KEY
     max_tokens: 8192
