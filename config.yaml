@@ -51,7 +51,10 @@ model_list:
     api_key: none
     max_tokens: 32768
     timeout: 180
-    temperature: 0.0
+    # Was 0.0. Greedy decoding sent this route into repetition loops in long
+    # agentic contexts, and litellm_params override the caller's temperature,
+    # so MoA's reference_temperature was being silently ignored.
+    temperature: 0.6
     extra_body:
       chat_template_kwargs:
         enable_thinking: false
@@ -66,7 +69,9 @@ model_list:
     api_key: none
     max_tokens: 32768
     timeout: 600
-    temperature: 0.0
+    # Was 0.0. See qwen36-fast above: greedy decoding caused repetition loops,
+    # and this pin overrode the temperature MoA asked for.
+    temperature: 0.6
     extra_body:
       chat_template_kwargs:
         enable_thinking: false
