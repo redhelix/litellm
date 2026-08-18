@@ -167,10 +167,10 @@ model_list:
       no-cache: true
     model: openrouter/google/gemini-2.5-pro
     api_key: os.environ/OPENROUTER_API_KEY
-    max_tokens: 8192
+    max_tokens: 65536
   model_info:
     max_input_tokens: 1048576
-    max_tokens: 8192
+    max_tokens: 65536
 - model_name: minimax-m2.7
   litellm_params:
     model: openrouter/minimax/minimax-m2.7
