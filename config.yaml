@@ -110,14 +110,17 @@ model_list:
   litellm_params:
     cache:
       no-cache: true
-    # Backend: hintonator RTX 5090 — Qwen3-30B-A3B NVFP4 (MoE, max_ctx=81920)
+    # Backend: hintonator RTX 5090 — Qwen3-VL-30B-A3B-Instruct NVFP4 (MoE).
+    # Backend reports max_model_len 81920 via /v1/models.
     model: openai/qwen3-30b-a3b
     api_base: http://192.168.50.73:8000/v1
     api_key: none
     max_tokens: 8192
     timeout: 600
   model_info:
-    max_input_tokens: 40960
+    # 73728 + 8192 = 81920, so input plus output can never exceed the backend
+    # context window. Was 40960, which wasted half the window.
+    max_input_tokens: 73728
     max_tokens: 8192
     supports_function_calling: true
     supports_vision: true
@@ -223,7 +226,8 @@ model_list:
     max_tokens: 8192
     timeout: 600
   model_info:
-    max_input_tokens: 40960
+    # Same backend as hintonator-qwen3-30b-a3b; see the note there.
+    max_input_tokens: 73728
     max_tokens: 8192
     supports_function_calling: true
 - model_name: nousresearch/hermes-4-405b
