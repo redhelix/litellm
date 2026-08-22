@@ -128,6 +128,24 @@ model_list:
     max_tokens: 8192
     supports_function_calling: true
     supports_vision: true
+# Same backend and same served process as hintonator-qwen3-30b-a3b above, under
+# the model's real name. vLLM publishes both served names; the legacy
+# qwen3-30b-a3b one exists so the Hermes and opencode configs kept resolving
+# across the swap. Prefer this name for anything new.
+- model_name: qwen3.8-27b
+  litellm_params:
+    cache:
+      no-cache: true
+    model: openai/qwen3.8-27b
+    api_base: http://192.168.50.73:8000/v1
+    api_key: none
+    max_tokens: 8192
+    timeout: 600
+  model_info:
+    max_input_tokens: 73728
+    max_tokens: 8192
+    supports_function_calling: true
+    supports_vision: true
 - model_name: nomic-embed-text
   litellm_params:
     model: openai/nomic-embed-text
