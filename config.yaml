@@ -313,6 +313,11 @@ router_settings:
       - qwen36-27b-aeon
       - kimi-k2.6
       - gemini-flash
+  # Same backend as hintonator-qwen3-30b-a3b, so it needs the same chain.
+  - qwen3.8-27b:
+      - qwen36-27b-aeon
+      - kimi-k2.6
+      - gemini-flash
   - docker-gpu-gemma4-26B:
       - hintonator-qwen3-30b-a3b
       - gemini-flash
@@ -350,6 +355,7 @@ router_settings:
   allowed_fails: 25
   context_window_fallbacks:
     - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"qwen3.8-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-003-qwen3.5-122b": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
@@ -361,6 +367,7 @@ litellm_settings:
   config_update_interval: 0  # disable DB config polling — DB failures reset context_window_fallbacks to None
   context_window_fallbacks:
     - {"hintonator-qwen3-30b-a3b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
+    - {"qwen3.8-27b": ["deepseek-v4-flash", "qwen36-27b-aeon", "kimi-k2.6", "gemini-flash"]}
     - {"docker-gpu-gemma4-26B": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
     - {"deepseek-v4-flash": ["kimi-k2.6", "gemini-flash"]}
     - {"spark-003-qwen3.5-122b": ["deepseek-v4-flash", "kimi-k2.6", "gemini-flash"]}
